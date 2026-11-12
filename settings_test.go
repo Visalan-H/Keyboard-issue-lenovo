@@ -62,7 +62,9 @@ func TestSettingsNeedsToken(t *testing.T) {
 
 func TestSettingsChecksHost(t *testing.T) {
 	s, srv, _ := newTestSettings(t)
+	s.mu.Lock()
 	s.host = "127.0.0.1:1" // pretend we listen elsewhere
+	s.mu.Unlock()
 	res := request(t, "GET", srv.URL+"/api/state", s.token, "")
 	if res.StatusCode != http.StatusForbidden {
 		t.Errorf("status %d, want 403 for wrong Host", res.StatusCode)
