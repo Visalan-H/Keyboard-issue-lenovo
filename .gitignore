@@ -1,0 +1,12 @@
+# Build output
+*.exe
+dist/
+
+# Local config written by the app when testing
+/deadkeys-config.local.json
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
