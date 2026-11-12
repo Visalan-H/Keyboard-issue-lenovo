@@ -230,7 +230,7 @@ const ALIASES = { NumEnter: "Enter" };
 const NO_VK = new Set(["Fn"]);
 
 const $ = (id) => document.getElementById(id);
-const token = new URLSearchParams(location.search).get("t") || "";
+const token = location.pathname.replace(/^\/s\//, "");
 
 let keyNames = [];          // every name the app understands
 let saved = null;           // config as last loaded or saved

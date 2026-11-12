@@ -15,6 +15,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 )
 
@@ -60,7 +61,9 @@ func (s *SettingsServer) URL() (string, error) {
 		return "", err
 	}
 	s.host = ln.Addr().String()
-	s.url = "http://" + s.host + "/?t=" + s.token
+	// The token goes in the path, not a query string: explorer.exe, which
+	// opens this URL, silently does nothing with a URL that has a "?".
+	s.url = "http://" + s.host + "/s/" + s.token
 	go http.Serve(ln, s.Handler())
 	return s.url, nil
 }
@@ -68,7 +71,7 @@ func (s *SettingsServer) URL() (string, error) {
 // Handler returns the HTTP handler; exposed for tests.
 func (s *SettingsServer) Handler() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /{$}", s.page)
+	mux.HandleFunc("GET /s/{token}", s.page)
 	mux.HandleFunc("GET /api/state", s.getState)
 	mux.HandleFunc("POST /api/config", s.saveConfig)
 	return s.guard(mux)
@@ -85,8 +88,8 @@ func (s *SettingsServer) guard(next http.Handler) http.Handler {
 			return
 		}
 		token := r.Header.Get("X-DeadKeys-Token")
-		if r.URL.Path == "/" {
-			token = r.URL.Query().Get("t")
+		if t, ok := strings.CutPrefix(r.URL.Path, "/s/"); ok {
+			token = t
 		}
 		if subtle.ConstantTimeCompare([]byte(token), []byte(s.token)) != 1 {
 			http.Error(w, "This link has expired. Open Settings from the DeadKeys tray icon again.", http.StatusForbidden)

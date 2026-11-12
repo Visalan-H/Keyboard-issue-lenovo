@@ -40,18 +40,21 @@ func TestSettingsNeedsToken(t *testing.T) {
 	s, srv, _ := newTestSettings(t)
 	for _, c := range []struct{ method, path, token string }{
 		{"GET", "/", ""},
-		{"GET", "/?t=wrong", ""},
+		{"GET", "/?t=" + s.token, ""}, // the old query form is gone
+		{"GET", "/s/", ""},
+		{"GET", "/s/wrong", ""},
+		{"GET", "/s/" + s.token + "/extra", ""},
 		{"GET", "/api/state", ""},
 		{"GET", "/api/state", "wrong"},
 		{"POST", "/api/config", ""},
 		{"GET", "/api/state?t=" + s.token, ""}, // the API only takes the header
 	} {
 		res := request(t, c.method, srv.URL+c.path, c.token, "{}")
-		if res.StatusCode != http.StatusForbidden {
-			t.Errorf("%s %s: status %d, want 403", c.method, c.path, res.StatusCode)
+		if res.StatusCode != http.StatusForbidden && res.StatusCode != http.StatusNotFound {
+			t.Errorf("%s %s: status %d, want 403 or 404", c.method, c.path, res.StatusCode)
 		}
 	}
-	res := request(t, "GET", srv.URL+"/?t="+s.token, "", "")
+	res := request(t, "GET", srv.URL+"/s/"+s.token, "", "")
 	if res.StatusCode != http.StatusOK || !strings.Contains(res.Header.Get("Content-Type"), "text/html") {
 		t.Errorf("page: status %d, type %q", res.StatusCode, res.Header.Get("Content-Type"))
 	}
@@ -132,7 +135,9 @@ func TestSettingsURLStartsOnce(t *testing.T) {
 		t.Fatal(err)
 	}
 	b, _ := s.URL()
-	if a != b || !strings.HasPrefix(a, "http://127.0.0.1:") || !strings.HasSuffix(a, "/?t="+s.token) {
+	// No "?" in the URL: explorer.exe silently drops URLs with a query
+	// string, so the token goes in the path.
+	if a != b || !strings.HasPrefix(a, "http://127.0.0.1:") || !strings.HasSuffix(a, "/s/"+s.token) || strings.Contains(a, "?") {
 		t.Errorf("URLs %q, %q", a, b)
 	}
 	res, err := http.Get(a)
