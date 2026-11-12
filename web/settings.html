@@ -6,191 +6,302 @@
 <link rel="icon" href="data:,">
 <title>DeadKeys Settings</title>
 <style>
+  /* Layout: one left-aligned column. The keyboard is the page's one object;
+     everything else is plain text, rules and space around it. Red means a
+     dead key and nothing else. Fonts are Windows system fonts because the
+     page may not load any from the web. */
   :root {
-    --bg: #f4f5f7;
-    --panel: #ffffff;
-    --text: #1d2330;
-    --muted: #667085;
-    --line: #d5d9e0;
-    --key: #2b2f36;
-    --key-text: #e8eaee;
-    --key-edge: #15171b;
-    --accent: #2563eb;
-    --dead: #dc2626;
-    --dead-soft: #fde8e8;
-    --layer: #2563eb;
-    --remap: #9333ea;
-    --layerkey: #d97706;
-    --ok: #15803d;
-    --ok-soft: #e7f6ec;
-    --err-soft: #fdecec;
+    --paper: #eceef1;
+    --ink: #14161a;
+    --ink-2: #565d68;
+    --rule: #cfd4db;
+    --field: #ffffff;
+    --red: #d7191f;
+    --red-wash: #f9e3e3;
+    --ok: #1d7347;
+    --warn: #9a5700;
+    --on-ink: #ffffff;
+    --deck: #1d1f23;
+    --cap: #2b2e34;
+    --cap-hi: #363a41;
+    --cap-edge: #121316;
+    --legend: #e9ebee;
+    --display: Bahnschrift, "DIN Alternate", "Roboto Condensed", "Arial Narrow", sans-serif;
+    --text: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #14161a;
-      --panel: #1d2026;
-      --text: #e7e9ee;
-      --muted: #98a2b3;
-      --line: #343944;
-      --key: #2e333c;
-      --key-edge: #0b0c0e;
-      --dead-soft: #3a1d1f;
-      --ok-soft: #173023;
-      --err-soft: #3a1d1f;
-      --accent: #5b8cff;
-      --layer: #5b8cff;
-      --remap: #b57aff;
+      color-scheme: dark;
+      --paper: #1b1d21;
+      --ink: #e6e8eb;
+      --ink-2: #9aa1ac;
+      --rule: #33373e;
+      --field: #23262b;
+      --red: #ef3b3f;
+      --red-wash: #3b1e20;
+      --ok: #4cb37b;
+      --warn: #e2a33c;
+      --on-ink: #14161a;
+      --deck: #101114;
     }
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--text);
-    font: 14px/1.45 "Segoe UI", system-ui, sans-serif;
+    margin: 0; background: var(--paper); color: var(--ink);
+    font: 15px/1.55 var(--text);
+    -webkit-font-smoothing: antialiased;
   }
-  header {
-    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-    padding: 14px 24px; background: var(--panel); border-bottom: 1px solid var(--line);
-    position: sticky; top: 0; z-index: 5;
-  }
-  header h1 { font-size: 18px; margin: 0; font-weight: 600; }
-  header .path { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
-  header .spacer { flex: 1; }
-  button {
-    font: inherit; border-radius: 6px; border: 1px solid var(--line);
-    background: var(--panel); color: var(--text); padding: 6px 14px; cursor: pointer;
-  }
-  button:hover:not(:disabled) { border-color: var(--accent); }
-  button:disabled { opacity: .45; cursor: default; }
-  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  button.small { padding: 2px 8px; font-size: 12px; }
-  button.danger:hover:not(:disabled) { border-color: var(--dead); color: var(--dead); }
-  main { max-width: 1180px; margin: 0 auto; padding: 20px 24px 60px; }
-  .banner { border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; white-space: pre-wrap; }
-  .banner.err { background: var(--err-soft); border: 1px solid var(--dead); }
-  .banner.ok { background: var(--ok-soft); border: 1px solid var(--ok); }
-  .banner.pick { background: var(--panel); border: 2px solid var(--accent); }
   [hidden] { display: none !important; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  p { margin: 0; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 
-  /* Keyboard: a grid of quarter-key columns and half-key rows. */
-  .board-wrap { overflow-x: auto; padding-bottom: 4px; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding-inline: 24px; }
+
+  /* Top bar */
+  .top { position: sticky; top: 0; z-index: 5; background: var(--paper); border-bottom: 1px solid var(--rule); }
+  .top .wrap { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding-block: 12px; }
+  .brand { font: 600 22px/1 var(--display); letter-spacing: -.01em; margin: 0; }
+  .brand span { color: var(--red); }
+  .top .spacer { flex: 1; }
+  .status { color: var(--ink-2); font-size: 14px; }
+  .status.dirty { color: var(--warn); font-weight: 600; }
+
+  button {
+    font: inherit; font-size: 14px; font-weight: 600; line-height: 20px;
+    padding: 7px 14px; border-radius: 4px; cursor: pointer;
+    border: 1px solid var(--ink); background: transparent; color: var(--ink);
+  }
+  button:hover:not(:disabled) { background: var(--field); }
+  button:disabled { opacity: .4; cursor: default; }
+  button.solid { background: var(--ink); color: var(--on-ink); }
+  button.solid:hover:not(:disabled) { background: var(--ink); opacity: .85; }
+  button.text {
+    border-color: transparent; padding-inline: 6px; font-weight: 500; color: var(--ink-2);
+    text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--rule);
+  }
+  button.text:hover:not(:disabled) { background: none; color: var(--ink); text-decoration-color: currentColor; }
+
+  .error {
+    margin-top: 20px; padding: 12px 16px; white-space: pre-wrap;
+    background: var(--red-wash); border-left: 3px solid var(--red);
+  }
+
+  section { padding-block: 32px; border-bottom: 1px solid var(--rule); }
+  section:last-of-type { border-bottom: 0; }
+  h2 { font: 600 24px/1.2 var(--display); margin: 0 0 4px; letter-spacing: -.005em; text-wrap: balance; }
+  .lede { color: var(--ink-2); max-width: 62ch; }
+
+  /* Keyboard */
+  .deck-wrap { overflow-x: auto; margin-top: 20px; padding-bottom: 4px; }
+  .deck { width: max-content; padding: 14px 14px 12px; border-radius: 10px; background: var(--deck); }
   .board {
     --u: 46px;
+    position: relative;
     display: grid;
     grid-template-columns: repeat(78, calc(var(--u) / 4));
     grid-template-rows: repeat(12, calc(var(--u) / 2));
-    gap: 0;
     width: max-content;
-    padding: 14px; border-radius: 12px; background: #0f1114;
+  }
+  /* The TrackPoint sits where G, H and B meet. */
+  .board::after {
+    content: ""; position: absolute; width: 10px; height: 10px; border-radius: 50%;
+    left: calc(var(--u) * 6.75 - 5px); top: calc(var(--u) * 4 - 5px);
+    background: #c8102e; box-shadow: 0 0 0 2px var(--deck); pointer-events: none;
   }
   .key {
-    position: relative; margin: 2px;
-    border-radius: 5px; border: 0; padding: 3px 5px;
-    background: var(--key); color: var(--key-text);
-    box-shadow: inset 0 -3px 0 var(--key-edge);
-    font-size: 11px; text-align: left; line-height: 1.15;
+    position: relative; margin: 2px; padding: 3px 5px; border: 0; border-radius: 5px;
+    background: var(--cap); color: var(--legend);
+    box-shadow: inset 0 -3px 0 var(--cap-edge);
+    font: 500 12px/1.1 var(--display); text-align: left;
     display: flex; flex-direction: column; justify-content: space-between;
     cursor: pointer; overflow: hidden;
   }
-  .key:hover { outline: 2px solid #8aa4ff; }
-  .key .label { font-weight: 600; font-size: 12px; }
-  .key .tag { font-size: 10px; font-weight: 700; border-radius: 3px; padding: 0 3px; align-self: flex-start; }
+  .key:hover:not(:disabled) { background: var(--cap-hi); }
+  .key:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
+  .key .tag { align-self: flex-end; font-size: 11px; color: #9fd8b4; }
+  .key .tag.hold { color: #ffd27a; }
+  .key .tag.spare { color: #d4b4ff; }
   .key.half { padding: 0 5px; justify-content: center; font-size: 10px; }
-  .key.half .label { font-size: 10px; }
-  .key.disabled { opacity: .35; cursor: default; }
-  .key.disabled:hover { outline: none; }
-  .key.dead { background: #5a1f22; box-shadow: inset 0 -3px 0 #2a0d0f, inset 0 0 0 2px var(--dead); }
-  .key.dead .label { text-decoration: line-through; text-decoration-color: #ff6b6b; }
-  .key.layerkey { box-shadow: inset 0 -3px 0 var(--key-edge), inset 0 0 0 2px var(--layerkey); }
-  .key .tag.layer { background: var(--layer); color: #fff; }
-  .key .tag.remap { background: var(--remap); color: #fff; }
-  .key .tag.lk { background: var(--layerkey); color: #fff; }
-  .key.selected { outline: 3px solid #fff; outline-offset: -1px; }
-  .board.picking .key:not(.disabled):not(.dead) { box-shadow: inset 0 -3px 0 var(--key-edge), inset 0 0 0 2px #8aa4ff; }
+  .key.disabled { opacity: .3; cursor: not-allowed; }
+  .key.disabled:hover { background: var(--cap); }
+  .key.dead { background: #c8102e; color: #fff; box-shadow: inset 0 -3px 0 #7c0a1c; }
+  .key.dead:hover:not(:disabled) { background: #da1f3c; }
+  .key.holdkey { box-shadow: inset 0 -3px 0 var(--cap-edge), inset 0 0 0 1px #ffd27a; }
+  .board.picking .key.cannot { opacity: .25; cursor: not-allowed; }
+  .board.picking .key.cannot:hover { background: var(--cap); }
+  .board.picking .key.can { box-shadow: inset 0 -3px 0 var(--cap-edge), inset 0 0 0 1px #9fd8b4; }
+  .key.flash { animation: flash .5s ease-out; }
+  @keyframes flash { from { background: #3f7d5a; } }
 
-  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin: 10px 2px 20px; color: var(--muted); font-size: 12px; }
-  .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; background: var(--c); }
+  .keynote { display: flex; gap: 6px 22px; flex-wrap: wrap; margin: 10px 2px 0; font-size: 13px; color: #a7adb6; }
+  .keynote b { color: var(--legend); font-weight: 600; }
+  .keynote i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; font-style: normal; }
 
-  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  @media (max-width: 860px) { .cols { grid-template-columns: 1fr; } }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; }
-  .card h2 { font-size: 15px; margin: 0 0 10px; }
-  .card h3 { font-size: 13px; margin: 16px 0 6px; color: var(--muted); font-weight: 600; }
-  .muted { color: var(--muted); }
-  .rules { list-style: none; margin: 0; padding: 0; }
-  .rules li { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--line); }
-  .rules li:last-child { border-bottom: 0; }
-  .rules .what { flex: 1; }
+  .pick {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    margin-top: 20px; padding: 12px 16px; background: var(--ink); color: var(--on-ink); border-radius: 4px;
+  }
+  .pick span { flex: 1; min-width: 220px; }
+  .pick .why { display: block; margin-top: 2px; color: #ffb4b4; font-weight: 600; }
+  .pick button { border-color: currentColor; color: inherit; }
+  .pick button:hover:not(:disabled) { background: transparent; opacity: .8; }
+  @media (prefers-color-scheme: dark) { .pick .why { color: var(--red); } }
+
+  /* Broken keys */
+  .fixes { list-style: none; margin: 20px 0 0; padding: 0; border-top: 1px solid var(--rule); }
+  .fix {
+    display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 6px 18px; align-items: center;
+    padding: 14px 0; border-bottom: 1px solid var(--rule);
+  }
+  .cap {
+    width: 44px; height: 44px; display: grid; place-items: center; border-radius: 6px;
+    font: 600 17px/1 var(--display); background: var(--cap); color: var(--legend);
+    box-shadow: inset 0 -3px 0 var(--cap-edge);
+  }
+  .cap.dead { background: #c8102e; color: #fff; box-shadow: inset 0 -3px 0 #7c0a1c; }
+  .fix:last-child { border-bottom: 0; }
+  .fix .what { display: grid; gap: 4px; min-width: 0; }
+  .fix .name { font-weight: 600; }
+  .fix .state { font-size: 14px; font-weight: 600; color: var(--ink-2); }
+  .fix .state.ok { color: var(--ok); }
+  .fix .state.todo { color: var(--warn); font-weight: 600; }
+  .ways { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+  .way { display: inline-flex; align-items: center; gap: 4px; }
+  .x {
+    border: 0; padding: 0 5px; margin-left: 2px; font-size: 17px; line-height: 20px; font-weight: 400;
+    color: var(--ink-2); background: none;
+  }
+  .x:hover:not(:disabled) { color: var(--red); background: none; }
+  .fix .act { display: flex; gap: 4px 8px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+  .none { padding: 24px 0; color: var(--ink-2); border-bottom: 1px solid var(--rule); }
+  @media (max-width: 680px) {
+    .fix { grid-template-columns: 52px minmax(0, 1fr); }
+    .fix .act { grid-column: 2; justify-content: flex-start; }
+  }
+
   kbd {
-    font: 600 12px "Segoe UI", system-ui, sans-serif; padding: 1px 6px; border-radius: 4px;
-    border: 1px solid var(--line); border-bottom-width: 2px; background: var(--bg);
+    display: inline-block; min-width: 24px; padding: 1px 7px; text-align: center;
+    font: 500 13px/18px var(--display); border-radius: 4px;
+    background: var(--field); color: var(--ink); border: 1px solid var(--rule); border-bottom-width: 2px;
   }
-  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 6px 0; }
-  label.check { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+
+  textarea {
+    display: block; width: 100%; max-width: 640px; min-height: 84px; margin-top: 16px; resize: vertical;
+    font: 17px/1.5 var(--text); padding: 10px 12px; border-radius: 4px;
+    border: 1px solid var(--rule); background: var(--field); color: var(--ink);
+  }
+  textarea:focus-visible { outline: 2px solid var(--ink); outline-offset: 0; }
+
+  /* More settings */
+  details > summary {
+    cursor: pointer; list-style: none; font: 600 18px/1.2 var(--display); display: inline-flex; gap: 8px; align-items: center;
+  }
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary::after { content: "+"; color: var(--ink-2); font-weight: 400; }
+  details[open] > summary::after { content: "−"; }
+  .settings { margin-top: 18px; display: grid; gap: 0; max-width: 760px; }
+  .setting { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 4px 24px; padding: 14px 0; border-top: 1px solid var(--rule); }
+  .setting .label { font-weight: 600; }
+  .setting .help { color: var(--ink-2); font-size: 13px; }
+  .setting .ctl { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .setting .msg { color: var(--red); font-size: 13px; margin-top: 4px; }
+  .path { font-size: 13px; color: var(--ink-2); overflow-wrap: anywhere; }
+  @media (max-width: 680px) { .setting { grid-template-columns: 1fr; } }
   select, input[type=number] {
-    font: inherit; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line);
-    background: var(--panel); color: var(--text);
+    font: inherit; font-size: 14px; line-height: 20px; padding: 6px 8px; border-radius: 4px;
+    border: 1px solid var(--rule); background: var(--field); color: var(--ink);
   }
-  input[type=number] { width: 90px; }
-  .empty { color: var(--muted); font-style: italic; padding: 4px 0; }
+  input[type=number] { width: 84px; font-variant-numeric: tabular-nums; }
+  input[type=checkbox] { width: 16px; height: 16px; margin: 0; accent-color: var(--ink); }
+  label.check { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; }
+
+  .toast {
+    position: fixed; left: 24px; bottom: 24px; z-index: 10; display: flex; gap: 14px; align-items: center;
+    max-width: min(420px, calc(100% - 48px)); padding: 10px 10px 10px 16px; border-radius: 4px;
+    background: var(--ink); color: var(--on-ink); font-size: 14px;
+  }
+  .toast.bad { background: var(--red); color: #fff; }
+  .toast button { border-color: transparent; color: inherit; padding: 4px 8px; text-decoration: underline; text-underline-offset: 3px; }
+  .toast button:hover:not(:disabled) { background: transparent; opacity: .8; }
 </style>
 </head>
 <body>
-<header>
-  <div>
-    <h1>DeadKeys Settings</h1>
-    <div class="path" id="path"></div>
+<header class="top">
+  <div class="wrap">
+    <h1 class="brand">Dead<span>Keys</span></h1>
+    <div class="spacer"></div>
+    <span id="status" class="status">Saved</span>
+    <button id="revert" disabled>Discard</button>
+    <button id="save" class="solid" disabled>Save</button>
   </div>
-  <div class="spacer"></div>
-  <button id="defaults" class="danger" title="Replace everything with the built-in defaults (not saved until you click Save)">Reset to defaults</button>
-  <button id="revert" disabled>Undo changes</button>
-  <button id="save" class="primary" disabled>Save</button>
 </header>
 
-<main>
-  <div id="banner" class="banner" hidden></div>
-  <div id="pickBanner" class="banner pick" hidden>
-    <span id="pickText"></span>
-    <button id="pickCancel" class="small">Cancel (Esc)</button>
-  </div>
+<main class="wrap">
+  <div id="banner" class="error" hidden></div>
 
-  <div class="board-wrap"><div class="board" id="board"></div></div>
-  <div class="legend">
-    <span style="--c: var(--dead)">Dead key</span>
-    <span style="--c: var(--layer)">Layer rule: hold the layer key + this key</span>
-    <span style="--c: var(--remap)">Direct remap: this key always types another</span>
-    <span style="--c: var(--layerkey)">Layer key</span>
-  </div>
+  <section id="stepKeys">
+    <h2>Which keys don't work?</h2>
+    <p class="lede">Click each key that does nothing when you press it. Click it again to undo.</p>
+    <div id="pickbar" class="pick" hidden>
+      <span id="pickText"></span>
+      <button id="pickCancel">Cancel</button>
+    </div>
+    <div class="deck-wrap"><div class="deck">
+    <div class="board" id="board"></div>
+    <div class="keynote">
+      <span><i style="background:#c8102e"></i>Doesn't work</span>
+      <span><i style="background:#9fd8b4"></i>Types a dead key while you hold <b id="lgHold">Caps Lock</b></span>
+      <span><i style="background:#ffd27a"></i>The key you hold</span>
+      <span><i style="background:#d4b4ff"></i>Spare key</span>
+    </div>
+    </div></div>
+  </section>
 
-  <div class="cols">
-    <section class="card" id="keyCard">
-      <h2 id="keyTitle">Click a key</h2>
-      <div id="keyBody" class="muted">
-        Click a broken key on the keyboard above, mark it as dead, then choose which working key should type it.
+  <section>
+    <h2>How to type them</h2>
+    <p class="lede" id="fixLede"></p>
+    <ul class="fixes" id="fixes"></ul>
+  </section>
+
+  <section>
+    <h2>Try it</h2>
+    <p class="lede">Save first, then type here to check each shortcut.</p>
+    <textarea id="tryIt" spellcheck="false" aria-label="Type here to test your shortcuts"></textarea>
+  </section>
+
+  <section>
+    <details>
+      <summary>More settings</summary>
+      <div class="settings">
+        <div class="setting">
+          <div><div class="label">Hold key</div><div class="help">The key you hold down to type a dead key.</div></div>
+          <div>
+            <div class="ctl"><select id="layerKey" aria-label="Hold key"></select></div>
+            <div class="msg" id="layerKeyMsg"></div>
+          </div>
+        </div>
+        <div class="setting">
+          <div><div class="label">Quick tap</div><div class="help">What a tap on the hold key does when you don't press anything else.</div></div>
+          <div class="ctl">
+            <label class="check"><input type="checkbox" id="tapOn"> <span id="tapLabel">Still works as Caps Lock</span></label>
+            <span id="tapMsWrap">if released within <input type="number" id="tapMs" min="50" max="5000" step="50" aria-label="Quick tap time in milliseconds"> ms</span>
+          </div>
+        </div>
+        <div class="setting">
+          <div><div class="label">Start over</div><div class="help">Go back to the built-in setup. Nothing changes until you save.</div></div>
+          <div class="ctl"><button id="defaults">Reset to defaults</button></div>
+        </div>
+        <div class="setting">
+          <div><div class="label">Settings file</div></div>
+          <div class="path" id="path"></div>
+        </div>
       </div>
-    </section>
-
-    <section class="card">
-      <h2>All rules</h2>
-      <h3>Layer rules (hold <kbd id="lkName">CapsLock</kbd>)</h3>
-      <ul class="rules" id="layerRules"></ul>
-      <h3>Direct remaps (always on)</h3>
-      <ul class="rules" id="remapRules"></ul>
-
-      <h3>Layer key</h3>
-      <div class="row">
-        <select id="layerKey"></select>
-        <span class="muted">Hold it to use layer rules.</span>
-      </div>
-      <h3>Tap to toggle</h3>
-      <div class="row">
-        <input type="number" id="tapMs" min="0" max="5000" step="50"> <span>ms</span>
-        <span class="muted">A press and release this quick, with no other key, sends the layer key itself (toggles caps lock). 0 turns this off.</span>
-      </div>
-    </section>
-  </div>
+    </details>
+  </section>
 </main>
+
+<div class="toast" id="toast" role="status" hidden><span id="toastText"></span><button id="toastUndo" hidden>Undo</button></div>
 
 <script>
 "use strict";
@@ -219,15 +330,37 @@ const NUMPAD_X = 15.5;
 
 const LABELS = {
   Backspace: "⌫ Back", CapsLock: "Caps Lock", LShift: "Shift", RShift: "Shift", LCtrl: "Ctrl", RCtrl: "Ctrl",
-  LAlt: "Alt", RAlt: "Alt", LWin: "⊞", PrintScreen: "PrtSc", Insert: "Ins", Delete: "Del", Space: "",
+  LAlt: "Alt", RAlt: "Alt", LWin: "⊞", PrintScreen: "PrtSc", Insert: "Ins", Delete: "Del", Space: "Space",
   Left: "←", Right: "→", Up: "↑", Down: "↓", NumLock: "Num Lk", NumDivide: "/", NumMultiply: "*",
   NumSubtract: "−", NumAdd: "+", NumDecimal: ".", NumEnter: "Enter", Enter: "Enter ↵", Tab: "Tab ⇥",
 };
 for (let i = 0; i <= 9; i++) LABELS["Num" + i] = String(i);
+// Longer names for lists and menus, where a bare symbol is unclear.
+const LONG = {
+  LShift: "Left Shift", RShift: "Right Shift", LCtrl: "Left Ctrl", RCtrl: "Right Ctrl", LAlt: "Left Alt",
+  RAlt: "Right Alt", LWin: "Windows", Left: "Left arrow", Right: "Right arrow", Up: "Up arrow", Down: "Down arrow",
+  PrintScreen: "Print Screen", Insert: "Insert", Delete: "Delete", Backspace: "Backspace", Enter: "Enter",
+  Tab: "Tab", NumLock: "Num Lock", NumDivide: "Num /", NumMultiply: "Num *", NumSubtract: "Num −",
+  NumAdd: "Num +", NumDecimal: "Num .", Space: "Space",
+};
+for (let i = 0; i <= 9; i++) LONG["Num" + i] = "Num " + i;
 // Keys drawn on the board that map to a different config name.
 const ALIASES = { NumEnter: "Enter" };
 // Keys Windows never reports (Fn is handled inside the keyboard).
 const NO_VK = new Set(["Fn"]);
+// Keys worth suggesting as the one to hold with the hold key.
+const SUGGESTABLE = /^([A-Z0-9]|[`\-=[\]\\;',./])$/;
+// KeyboardEvent.code -> config name, so a real key press can pick a key.
+const CODES = {
+  Backquote: "`", Minus: "-", Equal: "=", BracketLeft: "[", BracketRight: "]", Backslash: "\\",
+  Semicolon: ";", Quote: "'", Comma: ",", Period: ".", Slash: "/", Space: "Space",
+  Enter: "Enter", NumpadEnter: "Enter", Backspace: "Backspace", ShiftLeft: "LShift", ShiftRight: "RShift",
+  ControlLeft: "LCtrl", ControlRight: "RCtrl", AltLeft: "LAlt", AltRight: "RAlt", MetaLeft: "LWin",
+  ArrowUp: "Up", ArrowDown: "Down", ArrowLeft: "Left", ArrowRight: "Right", Insert: "Insert",
+  Delete: "Delete", Home: "Home", End: "End", PrintScreen: "PrintScreen", CapsLock: "CapsLock",
+  NumLock: "NumLock", NumpadDivide: "NumDivide", NumpadMultiply: "NumMultiply",
+  NumpadSubtract: "NumSubtract", NumpadAdd: "NumAdd", NumpadDecimal: "NumDecimal",
+};
 
 const $ = (id) => document.getElementById(id);
 const token = location.pathname.replace(/^\/s\//, "");
@@ -235,9 +368,11 @@ const token = location.pathname.replace(/^\/s\//, "");
 let keyNames = [];          // every name the app understands
 let saved = null;           // config as last loaded or saved
 let cfg = null;             // config being edited
-let selected = null;        // config name of the selected key
-let picking = null;         // {kind: "layer"|"remap", target}
+let picking = null;         // {kind: "layer"|"remap", target, error}
 let defaults = null;        // built-in default config
+let undoSnap = null;        // config before the last change, for the toast's Undo
+let lastTap = 300;          // tap time to restore when quick tap is turned back on
+const pos = {};             // config name -> {x, y} centre on the board, in keys
 
 // ---------- helpers ----------
 
@@ -245,13 +380,15 @@ const lower = (s) => String(s).toLowerCase();
 const same = (a, b) => lower(a) === lower(b);
 const canon = (name) => keyNames.find((k) => same(k, name)) || name;
 const label = (name) => LABELS[name] ?? name;
+const longName = (name) => LONG[name] ?? label(name) ?? name;
 const clone = (o) => JSON.parse(JSON.stringify(o));
 const isDead = (name) => cfg.deadKeys.some((k) => same(k, name));
 const dirty = () => JSON.stringify(cfg) !== JSON.stringify(saved);
+const holdKey = () => canon(cfg.layerKey);
 
 function kbd(name) {
   const k = document.createElement("kbd");
-  k.textContent = label(name) || name;
+  k.textContent = longName(name);
   k.title = name;
   return k;
 }
@@ -263,11 +400,34 @@ function el(tag, props = {}, ...children) {
   return e;
 }
 
-function showBanner(kind, text) {
-  const b = $("banner");
-  b.className = "banner " + kind;
-  b.textContent = text;
-  b.hidden = !text;
+function button(text, onClick, className = "") {
+  const b = el("button", { textContent: text, className });
+  b.addEventListener("click", onClick);
+  return b;
+}
+
+function showBanner(text) {
+  $("banner").textContent = text;
+  $("banner").hidden = !text;
+}
+
+let toastTimer = 0;
+function toast(text, bad = false, undo = false) {
+  $("toastText").textContent = text;
+  $("toast").className = "toast" + (bad ? " bad" : "");
+  $("toastUndo").hidden = !undo;
+  $("toast").hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { $("toast").hidden = true; }, undo ? 6000 : 3500);
+}
+
+// change runs fn on the config, re-renders, and offers Undo with message.
+function change(message, fn) {
+  const before = clone(cfg);
+  fn();
+  undoSnap = before;
+  render();
+  if (message) toast(message, false, true);
 }
 
 async function api(path, options = {}) {
@@ -281,6 +441,65 @@ async function api(path, options = {}) {
   return body;
 }
 
+// ---------- rules ----------
+
+// Why from can't be used to type target, or "" if it can.
+function cannotUse(kind, from, target) {
+  if (!keyNames.some((k) => same(k, from))) return `${from} can't be used.`;
+  if (same(from, target)) return "A key can't type itself.";
+  if (isDead(from)) return `${longName(from)} doesn't work either. Pick a key that does.`;
+  if (same(from, holdKey())) return `${longName(from)} is the key you hold.`;
+  const r = cfg[kind].find((r) => same(r.from, from));
+  if (r) {
+    return kind === "layer"
+      ? `${longName(holdKey())} + ${longName(from)} already types ${longName(r.to)}.`
+      : `${longName(from)} is already the spare key for ${longName(r.to)}.`;
+  }
+  return "";
+}
+
+// The nearest working key that's free to use with the hold key.
+function suggest(target) {
+  const t = pos[canon(target)];
+  if (!t) return null;
+  let best = null, bestD = Infinity;
+  for (const name of keyNames) {
+    const p = pos[name];
+    if (!p || !SUGGESTABLE.test(name) || cannotUse("layer", name, target)) continue;
+    const d = Math.hypot(p.x - t.x, (p.y - t.y) * 1.3);
+    if (d < bestD) { best = name; bestD = d; }
+  }
+  return best;
+}
+
+function addRule(kind, from, target) {
+  const msg = kind === "layer"
+    ? `${longName(holdKey())} + ${longName(from)} now types ${longName(target)}.`
+    : `${longName(from)} now types ${longName(target)}.`;
+  change(msg, () => cfg[kind].push({ from: canon(from), to: canon(target) }));
+}
+
+function toggleDead(name) {
+  if (same(name, holdKey())) {
+    toast(`${longName(name)} is the key you hold. Change it under More settings first.`, true);
+    return;
+  }
+  if (isDead(name)) {
+    change(`${longName(name)} marked as working.`, () => {
+      cfg.deadKeys = cfg.deadKeys.filter((k) => !same(k, name));
+      cfg.layer = cfg.layer.filter((r) => !same(r.to, name));
+      cfg.remap = cfg.remap.filter((r) => !same(r.to, name));
+    });
+  } else {
+    change(`${longName(name)} marked as not working.`, () => {
+      cfg.deadKeys.push(canon(name));
+      // A dead key can't be pressed, so shortcuts that start from it are useless.
+      cfg.layer = cfg.layer.filter((r) => !same(r.from, name));
+      cfg.remap = cfg.remap.filter((r) => !same(r.from, name));
+    });
+  }
+}
+
 // ---------- drawing ----------
 
 function buildBoard() {
@@ -288,13 +507,13 @@ function buildBoard() {
   board.innerHTML = "";
   const place = (name, x, y, w = 1, h = 1) => {
     // x, w in keys; y, h in rows (each row is two grid rows).
-    const style = `grid-column: ${Math.round(x * 4) + 1} / span ${Math.round(w * 4)}; grid-row: ${y * 2 + 1} / span ${h * 2}`;
+    const col = Math.round(x * 4) + 1;
     if (name === "UpDown") {
-      addKey("Up", `grid-column: ${Math.round(x * 4) + 1} / span 4; grid-row: ${y * 2 + 1} / span 1`, true);
-      addKey("Down", `grid-column: ${Math.round(x * 4) + 1} / span 4; grid-row: ${y * 2 + 2} / span 1`, true);
+      addKey("Up", `grid-column: ${col} / span 4; grid-row: ${y * 2 + 1} / span 1`, true, x + .5, y);
+      addKey("Down", `grid-column: ${col} / span 4; grid-row: ${y * 2 + 2} / span 1`, true, x + .5, y + .5);
       return;
     }
-    addKey(name, style, false);
+    addKey(name, `grid-column: ${col} / span ${Math.round(w * 4)}; grid-row: ${y * 2 + 1} / span ${h * 2}`, false, x + w / 2, y);
   };
   MAIN_ROWS.forEach((row, y) => {
     let x = 0;
@@ -306,12 +525,13 @@ function buildBoard() {
   for (const [name, x, y, w = 1, h = 1] of NUMPAD) place(name, NUMPAD_X + x, y, w, h);
 }
 
-function addKey(drawName, style, half) {
+function addKey(drawName, style, half, x, y) {
   const b = document.createElement("button");
   b.className = "key" + (half ? " half" : "");
   b.style.cssText = style;
   b.dataset.draw = drawName;
   b.dataset.name = ALIASES[drawName] || drawName;
+  if (!pos[b.dataset.name]) pos[b.dataset.name] = { x, y };
   if (NO_VK.has(drawName)) {
     b.classList.add("disabled");
     b.title = "Fn is handled by the keyboard itself, so Windows never sees it.";
@@ -321,192 +541,213 @@ function addKey(drawName, style, half) {
 }
 
 function render() {
-  const layerKey = canon(cfg.layerKey);
+  const hk = holdKey();
+  const hkName = longName(hk);
+
   for (const b of document.querySelectorAll(".key")) {
     const name = b.dataset.name;
+    const drawLabel = label(b.dataset.draw);
+    b.innerHTML = "";
+    b.append(el("span", { textContent: drawLabel === "Space" ? "" : drawLabel }));
+    if (b.classList.contains("disabled")) continue;
     const layerTo = cfg.layer.find((r) => same(r.from, name));
     const remapTo = cfg.remap.find((r) => same(r.from, name));
-    b.classList.toggle("dead", isDead(name));
-    b.classList.toggle("layerkey", same(name, layerKey));
-    b.classList.toggle("selected", selected !== null && same(name, selected));
-    b.innerHTML = "";
-    b.append(el("span", { className: "label", textContent: label(b.dataset.draw) }));
-    if (b.classList.contains("half")) continue;
-    const tags = el("span", { style: "display:flex; gap:2px; flex-wrap:wrap" });
-    if (same(name, layerKey)) tags.append(el("span", { className: "tag lk", textContent: "layer" }));
-    if (layerTo) tags.append(el("span", { className: "tag layer", textContent: label(layerTo.to) || layerTo.to, title: `Hold ${layerKey} + ${name} types ${layerTo.to}` }));
-    if (remapTo) tags.append(el("span", { className: "tag remap", textContent: label(remapTo.to) || remapTo.to, title: `${name} always types ${remapTo.to}` }));
-    b.append(tags);
-    let title = name;
-    if (isDead(name)) title += " (dead)";
-    if (layerTo) title += `\n${layerKey} + ${name} → ${layerTo.to}`;
-    if (remapTo) title += `\n${name} → ${remapTo.to}`;
-    if (!b.classList.contains("disabled")) b.title = title;
+    const dead = isDead(name);
+    const can = picking ? !cannotUse(picking.kind, name, picking.target) : false;
+    b.classList.toggle("dead", dead);
+    b.classList.toggle("holdkey", same(name, hk));
+    b.classList.toggle("can", !!picking && can);
+    b.classList.toggle("cannot", !!picking && !can);
+    b.setAttribute("aria-pressed", String(dead));
+    if (!b.classList.contains("half")) {
+      if (same(name, hk)) b.append(el("span", { className: "tag hold", textContent: "hold" }));
+      else if (layerTo) b.append(el("span", { className: "tag", textContent: label(layerTo.to) }));
+      else if (remapTo) b.append(el("span", { className: "tag spare", textContent: label(remapTo.to) }));
+    }
+    let title = longName(name);
+    if (picking) title += can ? ": click to use this key" : "";
+    else if (same(name, hk)) title += ": the key you hold";
+    else title += dead ? ": doesn't work. Click if it does." : ": click if it doesn't work";
+    if (layerTo) title += `\nHold ${hkName} + ${longName(name)} types ${longName(layerTo.to)}`;
+    if (remapTo) title += `\n${longName(name)} always types ${longName(remapTo.to)}`;
+    b.title = title;
   }
-
   $("board").classList.toggle("picking", !!picking);
-  $("pickBanner").hidden = !picking;
+
+  $("pickbar").hidden = !picking;
   if (picking) {
+    const t = longName(picking.target);
     $("pickText").textContent = picking.kind === "layer"
-      ? `Click the key to hold with ${layerKey} to type ${picking.target}.  `
-      : `Click the key that should always type ${picking.target}.  `;
+      ? `Which key will you hold with ${hkName} to type ${t}? Click it below or press it.`
+      : `Which spare key should type ${t} from now on? It stops doing its own job. Click it below or press it.`;
+    if (picking.error) $("pickText").append(el("span", { className: "why", textContent: picking.error }));
   }
 
-  $("lkName").textContent = label(layerKey) || layerKey;
-  renderRuleList($("layerRules"), "layer", (r) => [kbd(layerKey), " + ", kbd(r.from), " types ", kbd(r.to)]);
-  renderRuleList($("remapRules"), "remap", (r) => [kbd(r.from), " types ", kbd(r.to)]);
-  renderSelected();
+  $("lgHold").textContent = hkName;
+  renderFixes();
+  renderSettings();
 
-  $("layerKey").value = canon(cfg.layerKey);
-  if (document.activeElement !== $("tapMs")) $("tapMs").value = cfg.tapTimeoutMs;
-  $("save").disabled = !dirty();
-  $("revert").disabled = !dirty() || !saved;
+  const isDirty = dirty();
+  $("save").disabled = !isDirty;
+  $("revert").disabled = !isDirty;
+  $("status").textContent = isDirty ? "Unsaved changes" : "Saved";
+  $("status").classList.toggle("dirty", isDirty);
 }
 
-function renderRuleList(ul, section, describe) {
+function renderFixes() {
+  const hk = holdKey();
+  const ul = $("fixes");
   ul.innerHTML = "";
-  if (cfg[section].length === 0) {
-    ul.append(el("li", { className: "empty", textContent: "None yet." }));
-    return;
+
+  // Dead keys first, then any working key that still has a shortcut to it.
+  const targets = [...cfg.deadKeys.map(canon)];
+  for (const r of [...cfg.layer, ...cfg.remap]) {
+    if (!targets.some((t) => same(t, r.to))) targets.push(canon(r.to));
   }
-  cfg[section].forEach((r, i) => {
-    const del = el("button", { className: "small danger", textContent: "Remove" });
-    del.addEventListener("click", () => { cfg[section].splice(i, 1); render(); });
-    ul.append(el("li", {}, el("span", { className: "what" }, ...describe(r)), del));
-  });
-}
+  const todo = targets.filter((t) => isDead(t) && !cfg.layer.some((r) => same(r.to, t)) && !cfg.remap.some((r) => same(r.to, t)));
 
-function renderSelected() {
-  const body = $("keyBody");
-  if (!selected) return;
-  const name = selected;
-  const layerKey = canon(cfg.layerKey);
-  $("keyTitle").textContent = "";
-  $("keyTitle").append("Key ", kbd(name));
-  body.className = "";
-  body.innerHTML = "";
-
-  if (same(name, layerKey)) {
-    body.append(el("p", { textContent: `This is the layer key. Hold it and press another key to use the layer rules. Change it under "Layer key".` }));
-    return;
+  const lede = $("fixLede");
+  lede.innerHTML = "";
+  const ex = cfg.layer.find((r) => isDead(r.to)) || cfg.layer[0];
+  if (targets.length === 0) {
+    lede.textContent = "Mark a key above and it shows up here.";
+  } else if (todo.length) {
+    lede.textContent = `${todo.length} of ${targets.length} still ${todo.length === 1 ? "needs" : "need"} a shortcut.`;
+  } else if (ex) {
+    lede.append("Hold ", kbd(hk), " and press ", kbd(ex.from), " to type ", kbd(ex.to), ". The same goes for each key below.");
   }
 
-  const deadBox = el("input", { type: "checkbox", checked: isDead(name) });
-  deadBox.addEventListener("change", () => {
-    if (deadBox.checked) {
-      cfg.deadKeys.push(name);
-      // A dead key can't be pressed, so rules starting from it are useless.
-      cfg.layer = cfg.layer.filter((r) => !same(r.from, name));
-      cfg.remap = cfg.remap.filter((r) => !same(r.from, name));
-    } else {
-      cfg.deadKeys = cfg.deadKeys.filter((k) => !same(k, name));
+  if (targets.length === 0) {
+    ul.append(el("li", { className: "none", textContent: "No dead keys marked yet." }));
+    return;
+  }
+
+  for (const t of targets) {
+    const dead = isDead(t);
+    const layers = cfg.layer.filter((r) => same(r.to, t));
+    const spares = cfg.remap.filter((r) => same(r.to, t));
+    const ready = layers.length + spares.length > 0;
+    const li = el("li", { className: "fix" });
+
+    li.append(el("div", { className: "cap" + (dead ? " dead" : ""), textContent: label(t) || t, title: t }));
+
+    const what = el("div", { className: "what" });
+    const ways = el("div", { className: "ways" });
+    for (const r of layers) {
+      ways.append(el("span", { className: "way" }, kbd(hk), "+", kbd(r.from),
+        removeBtn(`Remove ${longName(hk)} + ${longName(r.from)}`, () =>
+          change(`Removed ${longName(hk)} + ${longName(r.from)}.`, () => { cfg.layer = cfg.layer.filter((x) => x !== r); }))));
     }
-    render();
-  });
-  body.append(el("label", { className: "check" }, deadBox, "This key is dead (it doesn't work)"));
-
-  // How to type this key.
-  const typedBy = [
-    ...cfg.layer.filter((r) => same(r.to, name)).map((r) => ({ section: "layer", r })),
-    ...cfg.remap.filter((r) => same(r.to, name)).map((r) => ({ section: "remap", r })),
-  ];
-  body.append(el("h3", { textContent: `Ways to type ${name}` }));
-  const ways = el("ul", { className: "rules" });
-  if (typedBy.length === 0) {
-    ways.append(el("li", { className: "empty", textContent: isDead(name) ? "None yet. Add one below." : "Just press it." }));
-  }
-  for (const { section, r } of typedBy) {
-    const del = el("button", { className: "small danger", textContent: "Remove" });
-    del.addEventListener("click", () => {
-      cfg[section] = cfg[section].filter((x) => x !== r);
-      render();
-    });
-    const what = section === "layer" ? [kbd(layerKey), " + ", kbd(r.from)] : [kbd(r.from), " (direct)"];
-    ways.append(el("li", {}, el("span", { className: "what" }, ...what), del));
-  }
-  body.append(ways);
-
-  const addLayer = el("button", { textContent: `Add: hold ${label(layerKey) || layerKey} + a key` });
-  addLayer.addEventListener("click", () => startPick("layer", name));
-  const addRemap = el("button", { textContent: "Add: a spare key, always" });
-  addRemap.addEventListener("click", () => startPick("remap", name));
-  body.append(el("div", { className: "row" }, addLayer, addRemap));
-
-  // What this key does when pressed.
-  if (!isDead(name)) {
-    const own = [
-      ...cfg.layer.filter((r) => same(r.from, name)).map((r) => [kbd(layerKey), " + ", kbd(name), " types ", kbd(r.to)]),
-      ...cfg.remap.filter((r) => same(r.from, name)).map((r) => [kbd(name), " always types ", kbd(r.to)]),
-    ];
-    if (own.length) {
-      body.append(el("h3", { textContent: `What ${name} does` }));
-      const ul = el("ul", { className: "rules" });
-      for (const parts of own) ul.append(el("li", {}, el("span", { className: "what" }, ...parts)));
-      body.append(ul);
+    for (const r of spares) {
+      ways.append(el("span", { className: "way" }, "spare key ", kbd(r.from),
+        removeBtn(`Stop using ${longName(r.from)} as a spare key`, () =>
+          change(`${longName(r.from)} types ${longName(r.from)} again.`, () => { cfg.remap = cfg.remap.filter((x) => x !== r); }))));
     }
+    let state;
+    if (!dead) state = el("span", { className: "state", textContent: "Works normally, also has a shortcut" });
+    else if (ready) state = el("span", { className: "state ok", textContent: "Ready" });
+    else state = el("span", { className: "state todo", textContent: "No shortcut yet" });
+    const head = el("div", { className: "name" });
+    if (longName(t) !== label(t)) head.append(longName(t), " ");
+    head.append(state);
+    what.append(head);
+    if (ready) what.append(ways);
+    li.append(what);
+
+    const act = el("div", { className: "act" });
+    if (!ready) {
+      const s = suggest(t);
+      if (s) {
+        const use = el("button", { className: "solid" }, "Use ", kbd(hk), " + ", kbd(s));
+        use.addEventListener("click", () => addRule("layer", s, t));
+        act.append(use);
+      }
+      act.append(button(s ? "Choose another" : "Choose a key", () => startPick("layer", t), s ? "" : "solid"));
+    } else if (!layers.length) {
+      act.append(button(`Add ${longName(hk)} shortcut`, () => startPick("layer", t)));
+    }
+    act.append(button("Use a spare key", () => startPick("remap", t), "text"));
+    if (dead) act.append(button("It works", () => toggleDead(t), "text"));
+    li.append(act);
+    ul.append(li);
   }
 }
 
-// ---------- interaction ----------
-
-function onKeyClick(b) {
-  if (b.classList.contains("disabled")) return;
-  const name = b.dataset.name;
-  if (picking) {
-    finishPick(name);
-    return;
-  }
-  selected = name;
-  render();
+function removeBtn(title, onClick) {
+  const b = button("×", onClick, "x");
+  b.title = title;
+  b.setAttribute("aria-label", title);
+  return b;
 }
+
+function renderSettings() {
+  const hk = holdKey();
+  $("layerKey").value = hk;
+  const on = cfg.tapTimeoutMs > 0;
+  $("tapOn").checked = on;
+  $("tapLabel").textContent = `Still works as ${longName(hk)}`;
+  $("tapMsWrap").hidden = !on;
+  if (on && document.activeElement !== $("tapMs")) $("tapMs").value = cfg.tapTimeoutMs;
+}
+
+// ---------- picking ----------
 
 function startPick(kind, target) {
-  picking = { kind, target };
-  showBanner("", "");
+  picking = { kind, target, error: "" };
   render();
+  $("stepKeys").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-function finishPick(from) {
-  const { kind, target } = picking;
-  const layerKey = canon(cfg.layerKey);
-  let problem = "";
-  if (same(from, target)) problem = "A key can't type itself.";
-  else if (isDead(from)) problem = `${from} is dead, pick a key that works.`;
-  else if (same(from, layerKey)) problem = `${from} is the layer key.`;
-  else if (cfg[kind].some((r) => same(r.from, from))) {
-    const r = cfg[kind].find((r) => same(r.from, from));
-    problem = kind === "layer"
-      ? `${layerKey} + ${from} already types ${r.to}. Remove that rule first.`
-      : `${from} already always types ${r.to}. Remove that rule first.`;
-  }
+function tryPick(from) {
+  const problem = cannotUse(picking.kind, from, picking.target);
   if (problem) {
-    showBanner("err", problem);
+    picking.error = problem;
+    render();
     return;
   }
-  if (kind === "remap" && !confirm(`${from} will stop typing ${from} and type ${target} instead, everywhere. Continue?`)) {
-    return;
-  }
-  cfg[kind].push({ from: canon(from), to: canon(target) });
+  const { kind, target } = picking;
   picking = null;
-  showBanner("", "");
-  render();
+  addRule(kind, from, target);
+  const k = document.querySelector(`.key[data-name="${CSS.escape(canon(from))}"]`);
+  if (k) { k.classList.remove("flash"); void k.offsetWidth; k.classList.add("flash"); }
 }
 
 function cancelPick() {
   picking = null;
-  showBanner("", "");
   render();
 }
 
+function onKeyClick(b) {
+  if (b.classList.contains("disabled")) return;
+  const name = b.dataset.name;
+  if (picking) tryPick(name);
+  else toggleDead(name);
+}
+
+function codeToName(code) {
+  let m;
+  if ((m = /^Key([A-Z])$/.exec(code))) return m[1];
+  if ((m = /^Digit(\d)$/.exec(code))) return m[1];
+  if ((m = /^Numpad(\d)$/.exec(code))) return "Num" + m[1];
+  if (/^F\d{1,2}$/.test(code)) return code;
+  return CODES[code] || null; // Tab is left out so it still moves focus
+}
+
+// ---------- saving ----------
+
 async function save() {
+  if (!dirty()) return;
   $("save").disabled = true;
   try {
     const res = await api("/api/config", { method: "POST", body: JSON.stringify(cfg) });
     saved = clone(res.config);
     cfg = clone(res.config);
-    showBanner("ok", "Saved. The new rules are already active.");
+    showBanner("");
+    toast("Saved. The shortcuts work now.");
+    undoSnap = null;
   } catch (e) {
-    showBanner("err", "Not saved:\n" + e.message);
+    showBanner("Not saved. Fix this and save again:\n" + e.message);
+    toast("Not saved. See the message at the top.", true);
   }
   render();
 }
@@ -516,48 +757,86 @@ async function load() {
     const state = await api("/api/state");
     keyNames = state.keys.map((k) => k.name);
     defaults = state.defaults;
-    $("path").textContent = `${state.path}  ·  DeadKeys ${state.version}`;
+    $("path").textContent = `${state.path} (DeadKeys ${state.version})`;
     const sel = $("layerKey");
     sel.innerHTML = "";
-    for (const k of keyNames) sel.append(el("option", { value: k, textContent: k }));
+    for (const k of keyNames) sel.append(el("option", { value: k, textContent: longName(k) }));
     saved = clone(state.config);
     cfg = clone(state.config);
+    if (cfg.tapTimeoutMs > 0) lastTap = cfg.tapTimeoutMs;
     if (state.error) {
-      showBanner("err", `config.json has problems, so the defaults are shown instead. Saving will replace the file.\n\n${state.error}`);
+      showBanner(`The settings file has problems, so the defaults are shown. Saving replaces the file.\n\n${state.error}`);
       saved = null; // make Save available
     }
     buildBoard();
     render();
   } catch (e) {
-    showBanner("err", "Could not load settings: " + e.message);
+    showBanner("Settings didn't load: " + e.message + "\nOpen Settings from the DeadKeys tray icon again.");
   }
 }
 
 $("save").addEventListener("click", save);
-$("revert").addEventListener("click", () => { cfg = clone(saved); picking = null; showBanner("", ""); render(); });
-$("defaults").addEventListener("click", () => {
-  if (!confirm("Replace all rules and dead keys with the defaults? Nothing is saved until you click Save.")) return;
-  cfg = clone(defaults);
+$("revert").addEventListener("click", () => {
+  change("Changes discarded.", () => { cfg = clone(saved || defaults); picking = null; });
+});
+$("toastUndo").addEventListener("click", () => {
+  if (!undoSnap) return;
+  cfg = undoSnap;
+  undoSnap = null;
   picking = null;
+  $("toast").hidden = true;
   render();
 });
+
+let resetArmed = 0;
+$("defaults").addEventListener("click", (e) => {
+  const b = e.currentTarget;
+  if (!resetArmed) {
+    b.textContent = "Click again to reset";
+    resetArmed = setTimeout(() => { resetArmed = 0; b.textContent = "Reset to defaults"; }, 4000);
+    return;
+  }
+  clearTimeout(resetArmed);
+  resetArmed = 0;
+  b.textContent = "Reset to defaults";
+  change("Reset to defaults. Save to keep it.", () => { cfg = clone(defaults); picking = null; });
+});
+
 $("pickCancel").addEventListener("click", cancelPick);
 $("layerKey").addEventListener("change", (e) => {
   const k = e.target.value;
-  if (isDead(k)) {
-    showBanner("err", `${k} is marked dead, so it can't be the layer key.`);
-  } else if (cfg.layer.some((r) => same(r.from, k)) || cfg.remap.some((r) => same(r.from, k))) {
-    showBanner("err", `${k} already has a rule. Remove it before making ${k} the layer key.`);
-  } else {
-    cfg.layerKey = k;
+  let msg = "";
+  if (isDead(k)) msg = `${longName(k)} doesn't work, so it can't be the key you hold.`;
+  else if (cfg.layer.some((r) => same(r.from, k)) || cfg.remap.some((r) => same(r.from, k))) {
+    msg = `${longName(k)} is already part of a shortcut. Remove that shortcut first.`;
   }
-  render();
+  $("layerKeyMsg").textContent = msg;
+  if (msg) { render(); return; }
+  change(`You now hold ${longName(k)}.`, () => { cfg.layerKey = k; });
+});
+$("tapOn").addEventListener("change", (e) => {
+  change("", () => { cfg.tapTimeoutMs = e.target.checked ? lastTap : 0; });
 });
 $("tapMs").addEventListener("input", (e) => {
   const v = Number(e.target.value);
-  if (Number.isInteger(v) && v >= 0 && v <= 5000) { cfg.tapTimeoutMs = v; render(); }
+  if (Number.isInteger(v) && v >= 50 && v <= 5000) { cfg.tapTimeoutMs = lastTap = v; render(); }
 });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape" && picking) cancelPick(); });
+
+document.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && lower(e.key) === "s") {
+    e.preventDefault();
+    save();
+    return;
+  }
+  if (!picking) return;
+  if (e.key === "Escape") { cancelPick(); return; }
+  const t = e.target;
+  if (t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement || t instanceof HTMLInputElement) return;
+  const name = codeToName(e.code);
+  if (!name) return;
+  e.preventDefault();
+  tryPick(name);
+});
 window.addEventListener("beforeunload", (e) => { if (cfg && dirty()) e.preventDefault(); });
 
 load();

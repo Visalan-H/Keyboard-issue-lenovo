@@ -24,7 +24,7 @@ jobs:
         run: |
           mkdir -p dist/DeadKeys
           go build -trimpath -ldflags "-s -w -H=windowsgui -X main.version=${GITHUB_REF_NAME}" -o dist/DeadKeys/deadkeys.exe .
-          cp config.json README.md LICENSE dist/DeadKeys/
+          cp config.json README.md DOCS.md LICENSE dist/DeadKeys/
           cd dist
           zip -r "DeadKeys-${GITHUB_REF_NAME}-windows-amd64.zip" DeadKeys
           cp DeadKeys/deadkeys.exe .
