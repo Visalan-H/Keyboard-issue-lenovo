@@ -44,17 +44,20 @@ remember. Change them in the settings page or in `config.json`.
 2. Unzip it to a folder you can write to, for example
    `%LOCALAPPDATA%\DeadKeys` (paste that into the Explorer address bar).
    Don't use `Program Files`: DeadKeys saves `config.json` next to the exe.
-3. Right-click `deadkeys.exe` and choose **Run as administrator**.
+3. Double-click `deadkeys.exe`.
 
 A blue keycap icon appears in the tray (you may need to click the `^` arrow
 next to the clock and drag it out so it's always visible).
 
-### Why run as admin?
+### Programs that run as admin
 
-Windows doesn't let a normal program change keys that are typed into programs
-running as admin, such as Task Manager, Registry Editor, or an admin
-terminal. DeadKeys works everywhere else without admin, but you'll notice the
-missing keys as soon as you open one of those.
+Windows doesn't let a normal program change keys typed into programs running
+as admin, such as Task Manager, Registry Editor or an admin terminal. In those
+windows the dead keys stay dead. Everywhere else DeadKeys works without admin.
+
+If you need the rules inside admin programs too, right-click `deadkeys.exe`
+and choose **Run as administrator**, or use Option B below to start it as
+admin at login.
 
 ### "Windows protected your PC"
 
@@ -99,7 +102,13 @@ dead.
 
 ## Start automatically at login
 
-### Option A: Task Scheduler, as admin with no UAC prompt (recommended)
+### Option A: Startup folder (recommended)
+
+Press `Win + R`, type `shell:startup`, press Enter, and put a shortcut to
+`deadkeys.exe` in that folder. DeadKeys then starts at login without admin
+rights, so it won't work inside admin programs (see above).
+
+### Option B: Task Scheduler, as admin with no UAC prompt
 
 Open **PowerShell as administrator** and run (change the path if you put
 DeadKeys somewhere else):
@@ -121,12 +130,6 @@ runs `deadkeys.exe` **At log on**, tick **Run with highest privileges**, and
 on the **Conditions** and **Settings** tabs untick **Start the task only if
 the computer is on AC power** and **Stop the task if it runs longer than 3
 days**. Both are on by default and would stop DeadKeys on a laptop.
-
-### Option B: Startup folder (no admin)
-
-Press `Win + R`, type `shell:startup`, press Enter, and put a shortcut to
-`deadkeys.exe` in that folder. DeadKeys then starts at login without admin
-rights, so it won't work inside admin programs (see above).
 
 ## config.json
 
