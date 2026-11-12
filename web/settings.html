@@ -6,368 +6,302 @@
 <link rel="icon" href="data:,">
 <title>DeadKeys Settings</title>
 <style>
+  /* Layout: one left-aligned column. The keyboard is the page's one object;
+     everything else is plain text, rules and space around it. Red means a
+     dead key and nothing else. Fonts are Windows system fonts because the
+     page may not load any from the web. */
   :root {
-    color-scheme: light dark;
-    --bg: #f3f4f6;
-    --panel: #ffffff;
-    --panel-2: #f7f8fa;
-    --text: #1b1f27;
-    --muted: #5f6878;
-    --line: #e2e5ea;
-    --line-strong: #cdd2da;
-    --shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 2px 6px rgba(16, 24, 40, .05);
-    --board: #16181d;
-    --key: #2c3038;
-    --key-hover: #383d47;
-    --key-text: #eceef2;
-    --key-edge: #1a1c21;
-    --accent: #2563eb;
-    --accent-hover: #1d4ed8;
-    --accent-soft: #e8efff;
-    --dead: #dc2626;
-    --dead-soft: #fdeceb;
-    --warn: #b45309;
-    --warn-soft: #fef3e2;
-    --ok: #15803d;
-    --ok-soft: #e7f6ec;
-    --spare: #9333ea;
+    --paper: #eceef1;
+    --ink: #14161a;
+    --ink-2: #565d68;
+    --rule: #cfd4db;
+    --field: #ffffff;
+    --red: #d7191f;
+    --red-wash: #f9e3e3;
+    --ok: #1d7347;
+    --warn: #9a5700;
+    --on-ink: #ffffff;
+    --deck: #1d1f23;
+    --cap: #2b2e34;
+    --cap-hi: #363a41;
+    --cap-edge: #121316;
+    --legend: #e9ebee;
+    --display: Bahnschrift, "DIN Alternate", "Roboto Condensed", "Arial Narrow", sans-serif;
+    --text: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #121418;
-      --panel: #1b1e24;
-      --panel-2: #22262d;
-      --text: #e6e8ec;
-      --muted: #9aa3b2;
-      --line: #2c313a;
-      --line-strong: #3b414c;
-      --shadow: 0 1px 2px rgba(0, 0, 0, .35);
-      --board: #0c0d10;
-      --key-edge: #0a0b0d;
-      --accent: #4f83ff;
-      --accent-hover: #6b97ff;
-      --accent-soft: #1c2740;
-      --dead: #f05252;
-      --dead-soft: #3a1d1f;
-      --warn: #f5a524;
-      --warn-soft: #3a2a12;
-      --ok: #3fb96b;
-      --ok-soft: #163020;
-      --spare: #b57aff;
+      color-scheme: dark;
+      --paper: #1b1d21;
+      --ink: #e6e8eb;
+      --ink-2: #9aa1ac;
+      --rule: #33373e;
+      --field: #23262b;
+      --red: #ef3b3f;
+      --red-wash: #3b1e20;
+      --ok: #4cb37b;
+      --warn: #e2a33c;
+      --on-ink: #14161a;
+      --deck: #101114;
     }
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0; background: var(--bg); color: var(--text);
-    font: 14px/1.5 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+    margin: 0; background: var(--paper); color: var(--ink);
+    font: 15px/1.55 var(--text);
     -webkit-font-smoothing: antialiased;
   }
-  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [hidden] { display: none !important; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
   p { margin: 0; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 
-  header {
-    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-    padding: 12px max(24px, calc((100% - 1052px) / 2));
-    background: var(--panel); border-bottom: 1px solid var(--line);
-  }
-  header h1 { font-size: 18px; margin: 0; font-weight: 650; letter-spacing: -.01em; }
-  header .sub { color: var(--muted); font-size: 13px; }
-  header .spacer { flex: 1; }
-  .status { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
-  .status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+  .wrap { max-width: 1040px; margin: 0 auto; padding-inline: 24px; }
+
+  /* Top bar */
+  .top { position: sticky; top: 0; z-index: 5; background: var(--paper); border-bottom: 1px solid var(--rule); }
+  .top .wrap { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding-block: 12px; }
+  .brand { font: 600 22px/1 var(--display); letter-spacing: -.01em; margin: 0; }
+  .brand span { color: var(--red); }
+  .top .spacer { flex: 1; }
+  .status { color: var(--ink-2); font-size: 14px; }
   .status.dirty { color: var(--warn); font-weight: 600; }
-  .status.dirty::before { background: var(--warn); }
-
-  main { max-width: 1100px; margin: 0 auto; padding: 24px 24px 120px; display: grid; gap: 20px; }
-  main > * { min-width: 0; }
 
   button {
-    font: inherit; font-weight: 500; line-height: 20px; border-radius: 6px;
-    border: 1px solid var(--line-strong); background: var(--panel); color: var(--text);
-    padding: 6px 14px; cursor: pointer; transition: background-color .12s, border-color .12s, color .12s;
+    font: inherit; font-size: 14px; font-weight: 600; line-height: 20px;
+    padding: 7px 14px; border-radius: 4px; cursor: pointer;
+    border: 1px solid var(--ink); background: transparent; color: var(--ink);
   }
-  button:hover:not(:disabled) { background: var(--panel-2); border-color: var(--accent); }
-  button:disabled { opacity: .5; cursor: default; }
-  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  button.primary:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
-  button.link { border: 0; background: none; color: var(--accent); padding: 4px 6px; }
-  button.link:hover:not(:disabled) { background: var(--accent-soft); }
-  button.danger:hover:not(:disabled) { border-color: var(--dead); color: var(--dead); background: var(--dead-soft); }
-  button.x {
-    border: 0; background: none; color: var(--muted); padding: 0 4px; font-size: 16px; line-height: 18px;
+  button:hover:not(:disabled) { background: var(--field); }
+  button:disabled { opacity: .4; cursor: default; }
+  button.solid { background: var(--ink); color: var(--on-ink); }
+  button.solid:hover:not(:disabled) { background: var(--ink); opacity: .85; }
+  button.text {
+    border-color: transparent; padding-inline: 6px; font-weight: 500; color: var(--ink-2);
+    text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--rule);
   }
-  button.x:hover:not(:disabled) { color: var(--dead); background: var(--dead-soft); }
+  button.text:hover:not(:disabled) { background: none; color: var(--ink); text-decoration-color: currentColor; }
 
-  .banner {
-    border-radius: 8px; padding: 10px 14px; white-space: pre-wrap;
-    border: 1px solid var(--dead); border-left-width: 4px; background: var(--dead-soft);
+  .error {
+    margin-top: 20px; padding: 12px 16px; white-space: pre-wrap;
+    background: var(--red-wash); border-left: 3px solid var(--red);
   }
 
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); }
-  .card > .head { display: flex; align-items: flex-start; gap: 12px; padding: 18px 20px 0; }
-  .card > .body { padding: 14px 20px 20px; }
-  .step {
-    flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
-    background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 14px;
-  }
-  .card h2 { font-size: 16px; font-weight: 650; margin: 2px 0 2px; }
-  .card .hint { color: var(--muted); }
-
-  .how {
-    display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
-    padding: 14px 18px; border-radius: 12px; background: var(--accent-soft); border: 1px solid transparent;
-  }
-  .how strong { font-weight: 650; }
+  section { padding-block: 32px; border-bottom: 1px solid var(--rule); }
+  section:last-of-type { border-bottom: 0; }
+  h2 { font: 600 24px/1.2 var(--display); margin: 0 0 4px; letter-spacing: -.005em; text-wrap: balance; }
+  .lede { color: var(--ink-2); max-width: 62ch; }
 
   /* Keyboard */
-  .board-wrap { overflow-x: auto; padding: 4px 2px 8px; }
+  .deck-wrap { overflow-x: auto; margin-top: 20px; padding-bottom: 4px; }
+  .deck { width: max-content; padding: 14px 14px 12px; border-radius: 10px; background: var(--deck); }
   .board {
     --u: 46px;
+    position: relative;
     display: grid;
     grid-template-columns: repeat(78, calc(var(--u) / 4));
     grid-template-rows: repeat(12, calc(var(--u) / 2));
-    width: max-content; margin: 0 auto; padding: 14px; border-radius: 14px; background: var(--board);
+    width: max-content;
+  }
+  /* The TrackPoint sits where G, H and B meet. */
+  .board::after {
+    content: ""; position: absolute; width: 10px; height: 10px; border-radius: 50%;
+    left: calc(var(--u) * 6.75 - 5px); top: calc(var(--u) * 4 - 5px);
+    background: #c8102e; box-shadow: 0 0 0 2px var(--deck); pointer-events: none;
   }
   .key {
-    position: relative; margin: 2px; border-radius: 6px; border: 0; padding: 3px 5px;
-    background: var(--key); color: var(--key-text);
-    box-shadow: inset 0 -3px 0 var(--key-edge);
-    font: inherit; font-size: 11px; text-align: left; line-height: 1.15;
+    position: relative; margin: 2px; padding: 3px 5px; border: 0; border-radius: 5px;
+    background: var(--cap); color: var(--legend);
+    box-shadow: inset 0 -3px 0 var(--cap-edge);
+    font: 500 12px/1.1 var(--display); text-align: left;
     display: flex; flex-direction: column; justify-content: space-between;
-    cursor: pointer; overflow: hidden; transition: none;
+    cursor: pointer; overflow: hidden;
   }
-  .key:hover:not(:disabled) { background: var(--key-hover); border: 0; outline: 2px solid #8aa4ff; outline-offset: -1px; }
-  .key:focus-visible { outline: 2px solid #fff; outline-offset: -1px; }
-  .key .label { font-weight: 600; font-size: 12px; }
-  .key .tag {
-    align-self: flex-start; font-size: 10px; font-weight: 700; line-height: 13px;
-    border-radius: 3px; padding: 0 4px; color: #fff; white-space: nowrap;
-  }
-  .key .tag.hold { background: #f59e0b; color: #1b1300; }
-  .key .tag.via { background: #16a34a; }
-  .key .tag.spare { background: var(--spare); }
+  .key:hover:not(:disabled) { background: var(--cap-hi); }
+  .key:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
+  .key .tag { align-self: flex-end; font-size: 11px; color: #9fd8b4; }
+  .key .tag.hold { color: #ffd27a; }
+  .key .tag.spare { color: #d4b4ff; }
   .key.half { padding: 0 5px; justify-content: center; font-size: 10px; }
-  .key.half .label { font-size: 10px; }
   .key.disabled { opacity: .3; cursor: not-allowed; }
-  .key.disabled:hover { outline: none; background: var(--key); }
-  .key.dead { background: #6b1d21; box-shadow: inset 0 -3px 0 #2a0d0f, inset 0 0 0 2px #f05252; }
-  .key.dead:hover:not(:disabled) { background: #7d2328; }
-  .key.dead .label { text-decoration: line-through; text-decoration-color: #ff8a8a; }
-  .key.holdkey { box-shadow: inset 0 -3px 0 var(--key-edge), inset 0 0 0 2px #f59e0b; }
-  .board.picking .key.can { box-shadow: inset 0 -3px 0 var(--key-edge), inset 0 0 0 2px #4ade80; }
-  .board.picking .key.cannot { opacity: .3; cursor: not-allowed; }
-  .board.picking .key.cannot:hover { outline: none; background: var(--key); }
-  .key.flash { animation: flash .6s ease-out; }
-  @keyframes flash { from { outline: 3px solid #fff; outline-offset: -1px; } }
+  .key.disabled:hover { background: var(--cap); }
+  .key.dead { background: #c8102e; color: #fff; box-shadow: inset 0 -3px 0 #7c0a1c; }
+  .key.dead:hover:not(:disabled) { background: #da1f3c; }
+  .key.holdkey { box-shadow: inset 0 -3px 0 var(--cap-edge), inset 0 0 0 1px #ffd27a; }
+  .board.picking .key.cannot { opacity: .25; cursor: not-allowed; }
+  .board.picking .key.cannot:hover { background: var(--cap); }
+  .board.picking .key.can { box-shadow: inset 0 -3px 0 var(--cap-edge), inset 0 0 0 1px #9fd8b4; }
+  .key.flash { animation: flash .5s ease-out; }
+  @keyframes flash { from { background: #3f7d5a; } }
 
-  .legend { display: flex; justify-content: center; gap: 6px 18px; flex-wrap: wrap; margin-top: 10px; color: var(--muted); font-size: 12px; }
-  .legend span::before {
-    content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px;
-    margin-right: 6px; vertical-align: -1px; background: var(--c);
-  }
+  .keynote { display: flex; gap: 6px 22px; flex-wrap: wrap; margin: 10px 2px 0; font-size: 13px; color: #a7adb6; }
+  .keynote b { color: var(--legend); font-weight: 600; }
+  .keynote i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; font-style: normal; }
 
-  /* Pick mode bar */
-  .pickbar {
-    position: sticky; top: 8px; z-index: 6; margin-bottom: 12px;
+  .pick {
     display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-    padding: 12px 14px; border-radius: 10px; color: #fff; background: var(--accent);
-    box-shadow: 0 6px 20px rgba(37, 99, 235, .3); font-weight: 500;
+    margin-top: 20px; padding: 12px 16px; background: var(--ink); color: var(--on-ink); border-radius: 4px;
   }
-  .pickbar span { flex: 1; min-width: 200px; }
-  .pickbar .err { display: block; font-weight: 600; margin-top: 2px; }
-  .pickbar button { background: rgba(255, 255, 255, .15); border-color: rgba(255, 255, 255, .5); color: #fff; }
-  .pickbar button:hover:not(:disabled) { background: rgba(255, 255, 255, .25); border-color: #fff; }
+  .pick span { flex: 1; min-width: 220px; }
+  .pick .why { display: block; margin-top: 2px; color: #ffb4b4; font-weight: 600; }
+  .pick button { border-color: currentColor; color: inherit; }
+  .pick button:hover:not(:disabled) { background: transparent; opacity: .8; }
+  @media (prefers-color-scheme: dark) { .pick .why { color: var(--red); } }
 
-  /* Broken key rows */
-  .fixes { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  /* Broken keys */
+  .fixes { list-style: none; margin: 20px 0 0; padding: 0; border-top: 1px solid var(--rule); }
   .fix {
-    display: grid; grid-template-columns: auto 1fr auto; gap: 8px 16px; align-items: center;
-    padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-2);
+    display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 6px 18px; align-items: center;
+    padding: 14px 0; border-bottom: 1px solid var(--rule);
   }
-  .fix.todo { border-color: var(--warn); background: var(--warn-soft); }
-  .fix .big {
-    min-width: 48px; height: 48px; padding: 0 10px; display: grid; place-items: center;
-    border-radius: 8px; background: var(--key); color: var(--key-text); font-weight: 700; font-size: 16px;
-    box-shadow: inset 0 -3px 0 var(--key-edge);
+  .cap {
+    width: 44px; height: 44px; display: grid; place-items: center; border-radius: 6px;
+    font: 600 17px/1 var(--display); background: var(--cap); color: var(--legend);
+    box-shadow: inset 0 -3px 0 var(--cap-edge);
   }
-  .fix .big.dead { background: #6b1d21; box-shadow: inset 0 -3px 0 #2a0d0f, inset 0 0 0 2px #f05252; }
-  .fix .info { display: grid; gap: 6px; min-width: 0; }
-  .fix .title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-weight: 600; }
-  .pill { font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 99px; }
-  .pill.ok { background: var(--ok-soft); color: var(--ok); }
-  .pill.todo { background: var(--panel); color: var(--warn); border: 1px solid var(--warn); }
-  .pill.works { background: var(--panel); color: var(--muted); border: 1px solid var(--line-strong); }
-  .ways { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-  .way {
-    display: inline-flex; align-items: center; gap: 4px; padding: 3px 4px 3px 8px;
-    border-radius: 8px; background: var(--panel); border: 1px solid var(--line-strong);
+  .cap.dead { background: #c8102e; color: #fff; box-shadow: inset 0 -3px 0 #7c0a1c; }
+  .fix:last-child { border-bottom: 0; }
+  .fix .what { display: grid; gap: 4px; min-width: 0; }
+  .fix .name { font-weight: 600; }
+  .fix .state { font-size: 14px; font-weight: 600; color: var(--ink-2); }
+  .fix .state.ok { color: var(--ok); }
+  .fix .state.todo { color: var(--warn); font-weight: 600; }
+  .ways { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+  .way { display: inline-flex; align-items: center; gap: 4px; }
+  .x {
+    border: 0; padding: 0 5px; margin-left: 2px; font-size: 17px; line-height: 20px; font-weight: 400;
+    color: var(--ink-2); background: none;
   }
-  .way .what { display: inline-flex; align-items: center; gap: 4px; }
-  .way.spare { border-color: var(--spare); }
-  .fix .actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-  .empty { padding: 22px; text-align: center; color: var(--muted); border: 1px dashed var(--line-strong); border-radius: 10px; }
-  @media (max-width: 720px) {
-    .fix { grid-template-columns: auto 1fr; }
-    .fix .actions { grid-column: 1 / -1; justify-content: flex-start; }
+  .x:hover:not(:disabled) { color: var(--red); background: none; }
+  .fix .act { display: flex; gap: 4px 8px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+  .none { padding: 24px 0; color: var(--ink-2); border-bottom: 1px solid var(--rule); }
+  @media (max-width: 680px) {
+    .fix { grid-template-columns: 52px minmax(0, 1fr); }
+    .fix .act { grid-column: 2; justify-content: flex-start; }
   }
 
   kbd {
-    display: inline-block; font: 600 12px/18px "Segoe UI", system-ui, sans-serif;
-    padding: 0 6px; min-width: 22px; text-align: center; border-radius: 4px;
-    border: 1px solid var(--line-strong); border-bottom-width: 2px; background: var(--panel); color: var(--text);
+    display: inline-block; min-width: 24px; padding: 1px 7px; text-align: center;
+    font: 500 13px/18px var(--display); border-radius: 4px;
+    background: var(--field); color: var(--ink); border: 1px solid var(--rule); border-bottom-width: 2px;
   }
-  .how kbd { background: var(--panel); }
 
   textarea {
-    width: 100%; min-height: 70px; resize: vertical; font: inherit; font-size: 15px;
-    padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line-strong);
-    background: var(--panel); color: var(--text);
+    display: block; width: 100%; max-width: 640px; min-height: 84px; margin-top: 16px; resize: vertical;
+    font: 17px/1.5 var(--text); padding: 10px 12px; border-radius: 4px;
+    border: 1px solid var(--rule); background: var(--field); color: var(--ink);
   }
-  textarea:focus-visible { outline-offset: 0; border-color: var(--accent); }
+  textarea:focus-visible { outline: 2px solid var(--ink); outline-offset: 0; }
 
-  details.more > summary {
-    cursor: pointer; padding: 16px 20px; font-weight: 600; list-style: none; display: flex; align-items: center; gap: 8px;
+  /* More settings */
+  details > summary {
+    cursor: pointer; list-style: none; font: 600 18px/1.2 var(--display); display: inline-flex; gap: 8px; align-items: center;
   }
-  details.more > summary::-webkit-details-marker { display: none; }
-  details.more > summary::before { content: "▸"; color: var(--muted); transition: transform .15s; }
-  details.more[open] > summary::before { transform: rotate(90deg); }
-  .setting { display: grid; grid-template-columns: 220px 1fr; gap: 6px 20px; padding: 14px 0; border-top: 1px solid var(--line); }
-  .setting:first-child { border-top: 0; padding-top: 0; }
-  .setting .name { font-weight: 600; }
-  .setting .hint { color: var(--muted); font-size: 13px; }
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary::after { content: "+"; color: var(--ink-2); font-weight: 400; }
+  details[open] > summary::after { content: "−"; }
+  .settings { margin-top: 18px; display: grid; gap: 0; max-width: 760px; }
+  .setting { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 4px 24px; padding: 14px 0; border-top: 1px solid var(--rule); }
+  .setting .label { font-weight: 600; }
+  .setting .help { color: var(--ink-2); font-size: 13px; }
   .setting .ctl { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .setting .msg { color: var(--dead); font-size: 13px; }
-  @media (max-width: 720px) { .setting { grid-template-columns: 1fr; } }
+  .setting .msg { color: var(--red); font-size: 13px; margin-top: 4px; }
+  .path { font-size: 13px; color: var(--ink-2); overflow-wrap: anywhere; }
+  @media (max-width: 680px) { .setting { grid-template-columns: 1fr; } }
   select, input[type=number] {
-    font: inherit; line-height: 20px; padding: 6px 8px; border-radius: 6px;
-    border: 1px solid var(--line-strong); background: var(--panel); color: var(--text);
+    font: inherit; font-size: 14px; line-height: 20px; padding: 6px 8px; border-radius: 4px;
+    border: 1px solid var(--rule); background: var(--field); color: var(--ink);
   }
-  input[type=number] { width: 90px; font-variant-numeric: tabular-nums; }
-  input[type=checkbox] { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); }
+  input[type=number] { width: 84px; font-variant-numeric: tabular-nums; }
+  input[type=checkbox] { width: 16px; height: 16px; margin: 0; accent-color: var(--ink); }
   label.check { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; }
-  .path { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
-
-  /* Unsaved changes bar */
-  .savebar {
-    position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 10;
-    display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 18px;
-    border-radius: 12px; background: #1b1f27; color: #fff; box-shadow: 0 10px 30px rgba(0, 0, 0, .3);
-    max-width: calc(100% - 32px); flex-wrap: wrap;
-  }
-  .savebar span { font-weight: 500; }
-  .savebar .muted { color: #aab2c0; font-size: 12px; font-weight: 400; }
-  .savebar button:not(.primary) { background: transparent; color: #fff; border-color: #4a5160; }
-  .savebar button:not(.primary):hover:not(:disabled) { background: #2b313b; border-color: #8a93a3; }
-  @media (prefers-color-scheme: dark) { .savebar { background: #2b303a; border: 1px solid #3b414c; } }
 
   .toast {
-    position: fixed; right: 20px; bottom: 20px; z-index: 11; display: flex; align-items: center; gap: 12px;
-    padding: 10px 12px 10px 16px; border-radius: 10px; background: var(--panel); color: var(--text);
-    border: 1px solid var(--line-strong); box-shadow: 0 10px 30px rgba(0, 0, 0, .18); max-width: 380px;
+    position: fixed; left: 24px; bottom: 24px; z-index: 10; display: flex; gap: 14px; align-items: center;
+    max-width: min(420px, calc(100% - 48px)); padding: 10px 10px 10px 16px; border-radius: 4px;
+    background: var(--ink); color: var(--on-ink); font-size: 14px;
   }
-  .toast.ok { border-left: 4px solid var(--ok); }
-  .toast.err { border-left: 4px solid var(--dead); }
-  .savebar:not([hidden]) ~ .toast { bottom: 84px; }
+  .toast.bad { background: var(--red); color: #fff; }
+  .toast button { border-color: transparent; color: inherit; padding: 4px 8px; text-decoration: underline; text-underline-offset: 3px; }
+  .toast button:hover:not(:disabled) { background: transparent; opacity: .8; }
 </style>
 </head>
 <body>
-<header>
-  <div>
-    <h1>DeadKeys</h1>
-    <div class="sub">Type the keys your keyboard can't.</div>
+<header class="top">
+  <div class="wrap">
+    <h1 class="brand">Dead<span>Keys</span></h1>
+    <div class="spacer"></div>
+    <span id="status" class="status">Saved</span>
+    <button id="revert" disabled>Discard</button>
+    <button id="save" class="solid" disabled>Save</button>
   </div>
-  <div class="spacer"></div>
-  <span id="status" class="status">All changes saved</span>
 </header>
 
-<main>
-  <div id="banner" class="banner" hidden></div>
+<main class="wrap">
+  <div id="banner" class="error" hidden></div>
 
-  <div class="how" id="how"></div>
-
-  <section class="card" id="stepKeys">
-    <div class="head">
-      <div class="step">1</div>
-      <div>
-        <h2>Click the keys that don't work</h2>
-        <p class="hint">Click a key to mark it broken. Click it again if you got it wrong.</p>
-      </div>
+  <section id="stepKeys">
+    <h2>Which keys don't work?</h2>
+    <p class="lede">Click each key that does nothing when you press it. Click it again to undo.</p>
+    <div id="pickbar" class="pick" hidden>
+      <span id="pickText"></span>
+      <button id="pickCancel">Cancel</button>
     </div>
-    <div class="body">
-      <div id="pickbar" class="pickbar" hidden>
-        <span id="pickText"></span>
-        <button id="pickCancel">Cancel</button>
-      </div>
-      <div class="board-wrap"><div class="board" id="board"></div></div>
-      <div class="legend">
-        <span style="--c: #f05252">Broken</span>
-        <span style="--c: #16a34a">Types a broken key while you hold <b id="lgHold">Caps Lock</b></span>
-        <span style="--c: #f59e0b">Hold key</span>
-        <span style="--c: var(--spare)">Spare key (always types another key)</span>
-      </div>
+    <div class="deck-wrap"><div class="deck">
+    <div class="board" id="board"></div>
+    <div class="keynote">
+      <span><i style="background:#c8102e"></i>Doesn't work</span>
+      <span><i style="background:#9fd8b4"></i>Types a dead key while you hold <b id="lgHold">Caps Lock</b></span>
+      <span><i style="background:#ffd27a"></i>The key you hold</span>
+      <span><i style="background:#d4b4ff"></i>Spare key</span>
     </div>
+    </div></div>
   </section>
 
-  <section class="card">
-    <div class="head">
-      <div class="step">2</div>
-      <div>
-        <h2>Choose how to type each broken key</h2>
-        <p class="hint" id="step2hint"></p>
-      </div>
-    </div>
-    <div class="body"><ul class="fixes" id="fixes"></ul></div>
+  <section>
+    <h2>How to type them</h2>
+    <p class="lede" id="fixLede"></p>
+    <ul class="fixes" id="fixes"></ul>
   </section>
 
-  <section class="card">
-    <div class="head">
-      <div class="step">3</div>
-      <div>
-        <h2>Save and try it</h2>
-        <p class="hint">After saving, type in the box below to check your shortcuts work.</p>
-      </div>
-    </div>
-    <div class="body">
-      <textarea id="tryIt" placeholder="Try it here, e.g. hold Caps Lock and press Q" spellcheck="false"></textarea>
-    </div>
+  <section>
+    <h2>Try it</h2>
+    <p class="lede">Save first, then type here to check each shortcut.</p>
+    <textarea id="tryIt" spellcheck="false" aria-label="Type here to test your shortcuts"></textarea>
   </section>
 
-  <details class="card more">
-    <summary>More settings</summary>
-    <div class="body" style="padding-top:0">
-      <div class="setting">
-        <div><div class="name">Hold key</div><div class="hint">The key you hold down to type broken keys.</div></div>
-        <div>
-          <div class="ctl"><select id="layerKey"></select></div>
-          <div class="msg" id="layerKeyMsg"></div>
+  <section>
+    <details>
+      <summary>More settings</summary>
+      <div class="settings">
+        <div class="setting">
+          <div><div class="label">Hold key</div><div class="help">The key you hold down to type a dead key.</div></div>
+          <div>
+            <div class="ctl"><select id="layerKey" aria-label="Hold key"></select></div>
+            <div class="msg" id="layerKeyMsg"></div>
+          </div>
+        </div>
+        <div class="setting">
+          <div><div class="label">Quick tap</div><div class="help">What a tap on the hold key does when you don't press anything else.</div></div>
+          <div class="ctl">
+            <label class="check"><input type="checkbox" id="tapOn"> <span id="tapLabel">Still works as Caps Lock</span></label>
+            <span id="tapMsWrap">if released within <input type="number" id="tapMs" min="50" max="5000" step="50" aria-label="Quick tap time in milliseconds"> ms</span>
+          </div>
+        </div>
+        <div class="setting">
+          <div><div class="label">Start over</div><div class="help">Go back to the built-in setup. Nothing changes until you save.</div></div>
+          <div class="ctl"><button id="defaults">Reset to defaults</button></div>
+        </div>
+        <div class="setting">
+          <div><div class="label">Settings file</div></div>
+          <div class="path" id="path"></div>
         </div>
       </div>
-      <div class="setting">
-        <div><div class="name">Quick tap</div><div class="hint">What happens when you tap the hold key on its own.</div></div>
-        <div class="ctl">
-          <label class="check"><input type="checkbox" id="tapOn"> <span id="tapLabel">A quick tap still works as Caps Lock</span></label>
-          <span id="tapMsWrap">within <input type="number" id="tapMs" min="50" max="5000" step="50"> ms</span>
-        </div>
-      </div>
-      <div class="setting">
-        <div><div class="name">Start over</div><div class="hint">Go back to the built-in setup. Nothing changes until you save.</div></div>
-        <div class="ctl"><button id="defaults" class="danger">Reset to defaults</button></div>
-      </div>
-      <div class="setting">
-        <div><div class="name">Settings file</div></div>
-        <div class="path" id="path"></div>
-      </div>
-    </div>
-  </details>
+    </details>
+  </section>
 </main>
 
-<div class="savebar" id="savebar" hidden>
-  <span>You have unsaved changes <span class="muted">· Ctrl+S</span></span>
-  <button id="revert">Discard</button>
-  <button id="save" class="primary">Save changes</button>
-</div>
-<div class="toast" id="toast" hidden><span id="toastText"></span><button class="link" id="toastUndo" hidden>Undo</button></div>
+<div class="toast" id="toast" role="status" hidden><span id="toastText"></span><button id="toastUndo" hidden>Undo</button></div>
 
 <script>
 "use strict";
@@ -419,7 +353,7 @@ const SUGGESTABLE = /^([A-Z0-9]|[`\-=[\]\\;',./])$/;
 // KeyboardEvent.code -> config name, so a real key press can pick a key.
 const CODES = {
   Backquote: "`", Minus: "-", Equal: "=", BracketLeft: "[", BracketRight: "]", Backslash: "\\",
-  Semicolon: ";", Quote: "'", Comma: ",", Period: ".", Slash: "/", Space: "Space", Tab: "Tab",
+  Semicolon: ";", Quote: "'", Comma: ",", Period: ".", Slash: "/", Space: "Space",
   Enter: "Enter", NumpadEnter: "Enter", Backspace: "Backspace", ShiftLeft: "LShift", ShiftRight: "RShift",
   ControlLeft: "LCtrl", ControlRight: "RCtrl", AltLeft: "LAlt", AltRight: "RAlt", MetaLeft: "LWin",
   ArrowUp: "Up", ArrowDown: "Down", ArrowLeft: "Left", ArrowRight: "Right", Insert: "Insert",
@@ -478,9 +412,9 @@ function showBanner(text) {
 }
 
 let toastTimer = 0;
-function toast(text, kind = "", undo = false) {
+function toast(text, bad = false, undo = false) {
   $("toastText").textContent = text;
-  $("toast").className = "toast " + kind;
+  $("toast").className = "toast" + (bad ? " bad" : "");
   $("toastUndo").hidden = !undo;
   $("toast").hidden = false;
   clearTimeout(toastTimer);
@@ -493,7 +427,7 @@ function change(message, fn) {
   fn();
   undoSnap = before;
   render();
-  if (message) toast(message, "", true);
+  if (message) toast(message, false, true);
 }
 
 async function api(path, options = {}) {
@@ -509,17 +443,17 @@ async function api(path, options = {}) {
 
 // ---------- rules ----------
 
-// Why from can't be used to type something, or "" if it can.
+// Why from can't be used to type target, or "" if it can.
 function cannotUse(kind, from, target) {
   if (!keyNames.some((k) => same(k, from))) return `${from} can't be used.`;
   if (same(from, target)) return "A key can't type itself.";
-  if (isDead(from)) return `${longName(from)} is broken too. Pick a key that works.`;
-  if (same(from, holdKey())) return `${longName(from)} is the hold key.`;
+  if (isDead(from)) return `${longName(from)} doesn't work either. Pick a key that does.`;
+  if (same(from, holdKey())) return `${longName(from)} is the key you hold.`;
   const r = cfg[kind].find((r) => same(r.from, from));
   if (r) {
     return kind === "layer"
       ? `${longName(holdKey())} + ${longName(from)} already types ${longName(r.to)}.`
-      : `${longName(from)} is already a spare key for ${longName(r.to)}.`;
+      : `${longName(from)} is already the spare key for ${longName(r.to)}.`;
   }
   return "";
 }
@@ -539,15 +473,15 @@ function suggest(target) {
 }
 
 function addRule(kind, from, target) {
-  const verb = kind === "layer"
-    ? `${longName(holdKey())} + ${longName(from)} now types ${longName(target)}`
-    : `${longName(from)} now types ${longName(target)}`;
-  change(verb + ".", () => cfg[kind].push({ from: canon(from), to: canon(target) }));
+  const msg = kind === "layer"
+    ? `${longName(holdKey())} + ${longName(from)} now types ${longName(target)}.`
+    : `${longName(from)} now types ${longName(target)}.`;
+  change(msg, () => cfg[kind].push({ from: canon(from), to: canon(target) }));
 }
 
 function toggleDead(name) {
   if (same(name, holdKey())) {
-    toast(`${longName(name)} is your hold key. Change it under More settings first.`, "err");
+    toast(`${longName(name)} is the key you hold. Change it under More settings first.`, true);
     return;
   }
   if (isDead(name)) {
@@ -557,9 +491,9 @@ function toggleDead(name) {
       cfg.remap = cfg.remap.filter((r) => !same(r.to, name));
     });
   } else {
-    change(`${longName(name)} marked as broken.`, () => {
+    change(`${longName(name)} marked as not working.`, () => {
       cfg.deadKeys.push(canon(name));
-      // A broken key can't be pressed, so shortcuts that start from it are useless.
+      // A dead key can't be pressed, so shortcuts that start from it are useless.
       cfg.layer = cfg.layer.filter((r) => !same(r.from, name));
       cfg.remap = cfg.remap.filter((r) => !same(r.from, name));
     });
@@ -610,78 +544,54 @@ function render() {
   const hk = holdKey();
   const hkName = longName(hk);
 
-  // Keyboard.
   for (const b of document.querySelectorAll(".key")) {
     const name = b.dataset.name;
-    if (b.classList.contains("disabled")) {
-      b.innerHTML = "";
-      b.append(el("span", { className: "label", textContent: label(b.dataset.draw) }));
-      continue;
-    }
+    const drawLabel = label(b.dataset.draw);
+    b.innerHTML = "";
+    b.append(el("span", { textContent: drawLabel === "Space" ? "" : drawLabel }));
+    if (b.classList.contains("disabled")) continue;
     const layerTo = cfg.layer.find((r) => same(r.from, name));
     const remapTo = cfg.remap.find((r) => same(r.from, name));
     const dead = isDead(name);
+    const can = picking ? !cannotUse(picking.kind, name, picking.target) : false;
     b.classList.toggle("dead", dead);
     b.classList.toggle("holdkey", same(name, hk));
-    const can = picking ? !cannotUse(picking.kind, name, picking.target) : false;
     b.classList.toggle("can", !!picking && can);
     b.classList.toggle("cannot", !!picking && !can);
     b.setAttribute("aria-pressed", String(dead));
-    b.innerHTML = "";
-    const drawLabel = label(b.dataset.draw);
-    b.append(el("span", { className: "label", textContent: drawLabel === "Space" ? "" : drawLabel }));
-    let title = longName(name);
     if (!b.classList.contains("half")) {
       if (same(name, hk)) b.append(el("span", { className: "tag hold", textContent: "hold" }));
-      else if (layerTo) b.append(el("span", { className: "tag via", textContent: "→ " + label(layerTo.to) }));
-      else if (remapTo) b.append(el("span", { className: "tag spare", textContent: "→ " + label(remapTo.to) }));
+      else if (layerTo) b.append(el("span", { className: "tag", textContent: label(layerTo.to) }));
+      else if (remapTo) b.append(el("span", { className: "tag spare", textContent: label(remapTo.to) }));
     }
-    if (picking) {
-      title += can ? " — click to use this key" : "";
-    } else if (same(name, hk)) {
-      title += " — the hold key";
-    } else {
-      title += dead ? " — broken. Click if it actually works." : " — click to mark as broken";
-    }
+    let title = longName(name);
+    if (picking) title += can ? ": click to use this key" : "";
+    else if (same(name, hk)) title += ": the key you hold";
+    else title += dead ? ": doesn't work. Click if it does." : ": click if it doesn't work";
     if (layerTo) title += `\nHold ${hkName} + ${longName(name)} types ${longName(layerTo.to)}`;
     if (remapTo) title += `\n${longName(name)} always types ${longName(remapTo.to)}`;
     b.title = title;
   }
   $("board").classList.toggle("picking", !!picking);
 
-  // Pick bar.
   $("pickbar").hidden = !picking;
   if (picking) {
     const t = longName(picking.target);
     $("pickText").textContent = picking.kind === "layer"
-      ? `Which key should you hold with ${hkName} to type ${t}? Click it on the keyboard, or press it.`
-      : `Which spare key should always type ${t}? It will stop doing its normal job. Click it, or press it.`;
-    if (picking.error) $("pickText").append(el("span", { className: "err", textContent: picking.error }));
+      ? `Which key will you hold with ${hkName} to type ${t}? Click it below or press it.`
+      : `Which spare key should type ${t} from now on? It stops doing its own job. Click it below or press it.`;
+    if (picking.error) $("pickText").append(el("span", { className: "why", textContent: picking.error }));
   }
 
   $("lgHold").textContent = hkName;
-  renderHow();
   renderFixes();
   renderSettings();
 
   const isDirty = dirty();
-  $("savebar").hidden = !isDirty;
-  $("status").textContent = isDirty ? "Unsaved changes" : "All changes saved";
+  $("save").disabled = !isDirty;
+  $("revert").disabled = !isDirty;
+  $("status").textContent = isDirty ? "Unsaved changes" : "Saved";
   $("status").classList.toggle("dirty", isDirty);
-}
-
-function renderHow() {
-  const how = $("how");
-  how.innerHTML = "";
-  const hk = holdKey();
-  const ex = cfg.layer.find((r) => isDead(r.to)) || cfg.layer[0];
-  if (ex) {
-    how.append(el("span", {}, el("strong", { textContent: "How it works: " }),
-      "hold ", kbd(hk), " and press ", kbd(ex.from), " to type ", kbd(ex.to), "."));
-  } else {
-    how.append(el("span", {}, el("strong", { textContent: "How it works: " }),
-      "mark your broken keys, then choose a working key to hold with ", kbd(hk), " to type each one."));
-  }
 }
 
 function renderFixes() {
@@ -689,20 +599,26 @@ function renderFixes() {
   const ul = $("fixes");
   ul.innerHTML = "";
 
-  // Broken keys first, then any working key that still has a shortcut to it.
+  // Dead keys first, then any working key that still has a shortcut to it.
   const targets = [...cfg.deadKeys.map(canon)];
   for (const r of [...cfg.layer, ...cfg.remap]) {
     if (!targets.some((t) => same(t, r.to))) targets.push(canon(r.to));
   }
   const todo = targets.filter((t) => isDead(t) && !cfg.layer.some((r) => same(r.to, t)) && !cfg.remap.some((r) => same(r.to, t)));
-  $("step2hint").textContent = targets.length === 0
-    ? ""
-    : todo.length
-      ? `${todo.length} broken ${todo.length === 1 ? "key needs" : "keys need"} a shortcut.`
-      : `All set. Hold ${longName(hk)} and press the key shown to type each broken key.`;
+
+  const lede = $("fixLede");
+  lede.innerHTML = "";
+  const ex = cfg.layer.find((r) => isDead(r.to)) || cfg.layer[0];
+  if (targets.length === 0) {
+    lede.textContent = "Mark a key above and it shows up here.";
+  } else if (todo.length) {
+    lede.textContent = `${todo.length} of ${targets.length} still ${todo.length === 1 ? "needs" : "need"} a shortcut.`;
+  } else if (ex) {
+    lede.append("Hold ", kbd(hk), " and press ", kbd(ex.from), " to type ", kbd(ex.to), ". The same goes for each key below.");
+  }
 
   if (targets.length === 0) {
-    ul.append(el("li", { className: "empty", textContent: "No broken keys yet. Click them on the keyboard above." }));
+    ul.append(el("li", { className: "none", textContent: "No dead keys marked yet." }));
     return;
   }
 
@@ -711,49 +627,48 @@ function renderFixes() {
     const layers = cfg.layer.filter((r) => same(r.to, t));
     const spares = cfg.remap.filter((r) => same(r.to, t));
     const ready = layers.length + spares.length > 0;
-    const li = el("li", { className: "fix" + (dead && !ready ? " todo" : "") });
+    const li = el("li", { className: "fix" });
 
-    li.append(el("div", { className: "big" + (dead ? " dead" : ""), textContent: label(t) || t, title: t }));
+    li.append(el("div", { className: "cap" + (dead ? " dead" : ""), textContent: label(t) || t, title: t }));
 
-    const info = el("div", { className: "info" });
-    const title = el("div", { className: "title" }, longName(t));
-    if (!dead) title.append(el("span", { className: "pill works", textContent: "Works normally" }));
-    else if (ready) title.append(el("span", { className: "pill ok", textContent: "✓ Ready" }));
-    else title.append(el("span", { className: "pill todo", textContent: "Needs a shortcut" }));
-    info.append(title);
-
+    const what = el("div", { className: "what" });
     const ways = el("div", { className: "ways" });
     for (const r of layers) {
-      ways.append(el("span", { className: "way" },
-        el("span", { className: "what" }, "Hold ", kbd(hk), "+", kbd(r.from)),
+      ways.append(el("span", { className: "way" }, kbd(hk), "+", kbd(r.from),
         removeBtn(`Remove ${longName(hk)} + ${longName(r.from)}`, () =>
           change(`Removed ${longName(hk)} + ${longName(r.from)}.`, () => { cfg.layer = cfg.layer.filter((x) => x !== r); }))));
     }
     for (const r of spares) {
-      ways.append(el("span", { className: "way spare" },
-        el("span", { className: "what" }, "Spare key ", kbd(r.from)),
-        removeBtn(`Remove spare key ${longName(r.from)}`, () =>
-          change(`${longName(r.from)} works normally again.`, () => { cfg.remap = cfg.remap.filter((x) => x !== r); }))));
+      ways.append(el("span", { className: "way" }, "spare key ", kbd(r.from),
+        removeBtn(`Stop using ${longName(r.from)} as a spare key`, () =>
+          change(`${longName(r.from)} types ${longName(r.from)} again.`, () => { cfg.remap = cfg.remap.filter((x) => x !== r); }))));
     }
-    if (!ready) {
-      const s = suggest(t);
-      ways.append(el("span", { className: "hint", textContent: s ? "Suggested:" : "Choose a key to hold with " + longName(hk) + "." }));
-      if (s) ways.append(el("span", {}, "Hold ", kbd(hk), " + ", kbd(s)));
-    }
-    info.append(ways);
-    li.append(info);
+    let state;
+    if (!dead) state = el("span", { className: "state", textContent: "Works normally, also has a shortcut" });
+    else if (ready) state = el("span", { className: "state ok", textContent: "Ready" });
+    else state = el("span", { className: "state todo", textContent: "No shortcut yet" });
+    const head = el("div", { className: "name" });
+    if (longName(t) !== label(t)) head.append(longName(t), " ");
+    head.append(state);
+    what.append(head);
+    if (ready) what.append(ways);
+    li.append(what);
 
-    const actions = el("div", { className: "actions" });
+    const act = el("div", { className: "act" });
     if (!ready) {
       const s = suggest(t);
-      if (s) actions.append(button(`Use ${longName(s)}`, () => addRule("layer", s, t), "primary"));
-      actions.append(button(s ? "Pick another key" : "Pick a key", () => startPick("layer", t), s ? "" : "primary"));
+      if (s) {
+        const use = el("button", { className: "solid" }, "Use ", kbd(hk), " + ", kbd(s));
+        use.addEventListener("click", () => addRule("layer", s, t));
+        act.append(use);
+      }
+      act.append(button(s ? "Choose another" : "Choose a key", () => startPick("layer", t), s ? "" : "solid"));
     } else if (!layers.length) {
-      actions.append(button(`Add hold ${longName(hk)} shortcut`, () => startPick("layer", t)));
+      act.append(button(`Add ${longName(hk)} shortcut`, () => startPick("layer", t)));
     }
-    actions.append(button("Use a spare key", () => startPick("remap", t), "link"));
-    if (dead) actions.append(button("It works", () => toggleDead(t), "link"));
-    li.append(actions);
+    act.append(button("Use a spare key", () => startPick("remap", t), "text"));
+    if (dead) act.append(button("It works", () => toggleDead(t), "text"));
+    li.append(act);
     ul.append(li);
   }
 }
@@ -770,7 +685,7 @@ function renderSettings() {
   $("layerKey").value = hk;
   const on = cfg.tapTimeoutMs > 0;
   $("tapOn").checked = on;
-  $("tapLabel").textContent = `A quick tap still works as ${longName(hk)}`;
+  $("tapLabel").textContent = `Still works as ${longName(hk)}`;
   $("tapMsWrap").hidden = !on;
   if (on && document.activeElement !== $("tapMs")) $("tapMs").value = cfg.tapTimeoutMs;
 }
@@ -815,8 +730,7 @@ function codeToName(code) {
   if ((m = /^Digit(\d)$/.exec(code))) return m[1];
   if ((m = /^Numpad(\d)$/.exec(code))) return "Num" + m[1];
   if (/^F\d{1,2}$/.test(code)) return code;
-  if (code === "Tab") return null; // keep Tab for moving focus
-  return CODES[code] || null;
+  return CODES[code] || null; // Tab is left out so it still moves focus
 }
 
 // ---------- saving ----------
@@ -829,13 +743,12 @@ async function save() {
     saved = clone(res.config);
     cfg = clone(res.config);
     showBanner("");
-    toast("Saved. Your shortcuts are on now.", "ok");
+    toast("Saved. The shortcuts work now.");
     undoSnap = null;
   } catch (e) {
-    showBanner("Couldn't save:\n" + e.message);
-    toast("Couldn't save. See the message at the top.", "err");
+    showBanner("Not saved. Fix this and save again:\n" + e.message);
+    toast("Not saved. See the message at the top.", true);
   }
-  $("save").disabled = false;
   render();
 }
 
@@ -844,7 +757,7 @@ async function load() {
     const state = await api("/api/state");
     keyNames = state.keys.map((k) => k.name);
     defaults = state.defaults;
-    $("path").textContent = `${state.path} · DeadKeys ${state.version}`;
+    $("path").textContent = `${state.path} (DeadKeys ${state.version})`;
     const sel = $("layerKey");
     sel.innerHTML = "";
     for (const k of keyNames) sel.append(el("option", { value: k, textContent: longName(k) }));
@@ -852,13 +765,13 @@ async function load() {
     cfg = clone(state.config);
     if (cfg.tapTimeoutMs > 0) lastTap = cfg.tapTimeoutMs;
     if (state.error) {
-      showBanner(`Your settings file has problems, so the defaults are shown instead. Saving will replace it.\n\n${state.error}`);
+      showBanner(`The settings file has problems, so the defaults are shown. Saving replaces the file.\n\n${state.error}`);
       saved = null; // make Save available
     }
     buildBoard();
     render();
   } catch (e) {
-    showBanner("Couldn't load settings: " + e.message);
+    showBanner("Settings didn't load: " + e.message + "\nOpen Settings from the DeadKeys tray icon again.");
   }
 }
 
@@ -877,14 +790,15 @@ $("toastUndo").addEventListener("click", () => {
 
 let resetArmed = 0;
 $("defaults").addEventListener("click", (e) => {
+  const b = e.currentTarget;
   if (!resetArmed) {
-    e.target.textContent = "Click again to reset";
-    resetArmed = setTimeout(() => { resetArmed = 0; e.target.textContent = "Reset to defaults"; }, 4000);
+    b.textContent = "Click again to reset";
+    resetArmed = setTimeout(() => { resetArmed = 0; b.textContent = "Reset to defaults"; }, 4000);
     return;
   }
   clearTimeout(resetArmed);
   resetArmed = 0;
-  e.target.textContent = "Reset to defaults";
+  b.textContent = "Reset to defaults";
   change("Reset to defaults. Save to keep it.", () => { cfg = clone(defaults); picking = null; });
 });
 
@@ -892,13 +806,13 @@ $("pickCancel").addEventListener("click", cancelPick);
 $("layerKey").addEventListener("change", (e) => {
   const k = e.target.value;
   let msg = "";
-  if (isDead(k)) msg = `${longName(k)} is broken, so it can't be the hold key.`;
+  if (isDead(k)) msg = `${longName(k)} doesn't work, so it can't be the key you hold.`;
   else if (cfg.layer.some((r) => same(r.from, k)) || cfg.remap.some((r) => same(r.from, k))) {
-    msg = `${longName(k)} is already used in a shortcut. Remove that first.`;
+    msg = `${longName(k)} is already part of a shortcut. Remove that shortcut first.`;
   }
   $("layerKeyMsg").textContent = msg;
   if (msg) { render(); return; }
-  change(`Hold key is now ${longName(k)}.`, () => { cfg.layerKey = k; });
+  change(`You now hold ${longName(k)}.`, () => { cfg.layerKey = k; });
 });
 $("tapOn").addEventListener("change", (e) => {
   change("", () => { cfg.tapTimeoutMs = e.target.checked ? lastTap : 0; });
@@ -916,7 +830,8 @@ document.addEventListener("keydown", (e) => {
   }
   if (!picking) return;
   if (e.key === "Escape") { cancelPick(); return; }
-  if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement || e.target instanceof HTMLInputElement) return;
+  const t = e.target;
+  if (t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement || t instanceof HTMLInputElement) return;
   const name = codeToName(e.code);
   if (!name) return;
   e.preventDefault();
