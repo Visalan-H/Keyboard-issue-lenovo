@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>DeadKeys Settings</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --panel: #ffffff;
+    --text: #1d2330;
+    --muted: #667085;
+    --line: #d5d9e0;
+    --key: #2b2f36;
+    --key-text: #e8eaee;
+    --key-edge: #15171b;
+    --accent: #2563eb;
+    --dead: #dc2626;
+    --dead-soft: #fde8e8;
+    --layer: #2563eb;
+    --remap: #9333ea;
+    --layerkey: #d97706;
+    --ok: #15803d;
+    --ok-soft: #e7f6ec;
+    --err-soft: #fdecec;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161a;
+      --panel: #1d2026;
+      --text: #e7e9ee;
+      --muted: #98a2b3;
+      --line: #343944;
+      --key: #2e333c;
+      --key-edge: #0b0c0e;
+      --dead-soft: #3a1d1f;
+      --ok-soft: #173023;
+      --err-soft: #3a1d1f;
+      --accent: #5b8cff;
+      --layer: #5b8cff;
+      --remap: #b57aff;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 14px/1.45 "Segoe UI", system-ui, sans-serif;
+  }
+  header {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: 14px 24px; background: var(--panel); border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; z-index: 5;
+  }
+  header h1 { font-size: 18px; margin: 0; font-weight: 600; }
+  header .path { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+  header .spacer { flex: 1; }
+  button {
+    font: inherit; border-radius: 6px; border: 1px solid var(--line);
+    background: var(--panel); color: var(--text); padding: 6px 14px; cursor: pointer;
+  }
+  button:hover:not(:disabled) { border-color: var(--accent); }
+  button:disabled { opacity: .45; cursor: default; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.small { padding: 2px 8px; font-size: 12px; }
+  button.danger:hover:not(:disabled) { border-color: var(--dead); color: var(--dead); }
+  main { max-width: 1180px; margin: 0 auto; padding: 20px 24px 60px; }
+  .banner { border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; white-space: pre-wrap; }
+  .banner.err { background: var(--err-soft); border: 1px solid var(--dead); }
+  .banner.ok { background: var(--ok-soft); border: 1px solid var(--ok); }
+  .banner.pick { background: var(--panel); border: 2px solid var(--accent); }
+  [hidden] { display: none !important; }
+
+  /* Keyboard: a grid of quarter-key columns and half-key rows. */
+  .board-wrap { overflow-x: auto; padding-bottom: 4px; }
+  .board {
+    --u: 46px;
+    display: grid;
+    grid-template-columns: repeat(78, calc(var(--u) / 4));
+    grid-template-rows: repeat(12, calc(var(--u) / 2));
+    gap: 0;
+    width: max-content;
+    padding: 14px; border-radius: 12px; background: #0f1114;
+  }
+  .key {
+    position: relative; margin: 2px;
+    border-radius: 5px; border: 0; padding: 3px 5px;
+    background: var(--key); color: var(--key-text);
+    box-shadow: inset 0 -3px 0 var(--key-edge);
+    font-size: 11px; text-align: left; line-height: 1.15;
+    display: flex; flex-direction: column; justify-content: space-between;
+    cursor: pointer; overflow: hidden;
+  }
+  .key:hover { outline: 2px solid #8aa4ff; }
+  .key .label { font-weight: 600; font-size: 12px; }
+  .key .tag { font-size: 10px; font-weight: 700; border-radius: 3px; padding: 0 3px; align-self: flex-start; }
+  .key.half { padding: 0 5px; justify-content: center; font-size: 10px; }
+  .key.half .label { font-size: 10px; }
+  .key.disabled { opacity: .35; cursor: default; }
+  .key.disabled:hover { outline: none; }
+  .key.dead { background: #5a1f22; box-shadow: inset 0 -3px 0 #2a0d0f, inset 0 0 0 2px var(--dead); }
+  .key.dead .label { text-decoration: line-through; text-decoration-color: #ff6b6b; }
+  .key.layerkey { box-shadow: inset 0 -3px 0 var(--key-edge), inset 0 0 0 2px var(--layerkey); }
+  .key .tag.layer { background: var(--layer); color: #fff; }
+  .key .tag.remap { background: var(--remap); color: #fff; }
+  .key .tag.lk { background: var(--layerkey); color: #fff; }
+  .key.selected { outline: 3px solid #fff; outline-offset: -1px; }
+  .board.picking .key:not(.disabled):not(.dead) { box-shadow: inset 0 -3px 0 var(--key-edge), inset 0 0 0 2px #8aa4ff; }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin: 10px 2px 20px; color: var(--muted); font-size: 12px; }
+  .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; background: var(--c); }
+
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 860px) { .cols { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; }
+  .card h2 { font-size: 15px; margin: 0 0 10px; }
+  .card h3 { font-size: 13px; margin: 16px 0 6px; color: var(--muted); font-weight: 600; }
+  .muted { color: var(--muted); }
+  .rules { list-style: none; margin: 0; padding: 0; }
+  .rules li { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--line); }
+  .rules li:last-child { border-bottom: 0; }
+  .rules .what { flex: 1; }
+  kbd {
+    font: 600 12px "Segoe UI", system-ui, sans-serif; padding: 1px 6px; border-radius: 4px;
+    border: 1px solid var(--line); border-bottom-width: 2px; background: var(--bg);
+  }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 6px 0; }
+  label.check { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+  select, input[type=number] {
+    font: inherit; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line);
+    background: var(--panel); color: var(--text);
+  }
+  input[type=number] { width: 90px; }
+  .empty { color: var(--muted); font-style: italic; padding: 4px 0; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>DeadKeys Settings</h1>
+    <div class="path" id="path"></div>
+  </div>
+  <div class="spacer"></div>
+  <button id="defaults" class="danger" title="Replace everything with the built-in defaults (not saved until you click Save)">Reset to defaults</button>
+  <button id="revert" disabled>Undo changes</button>
+  <button id="save" class="primary" disabled>Save</button>
+</header>
+
+<main>
+  <div id="banner" class="banner" hidden></div>
+  <div id="pickBanner" class="banner pick" hidden>
+    <span id="pickText"></span>
+    <button id="pickCancel" class="small">Cancel (Esc)</button>
+  </div>
+
+  <div class="board-wrap"><div class="board" id="board"></div></div>
+  <div class="legend">
+    <span style="--c: var(--dead)">Dead key</span>
+    <span style="--c: var(--layer)">Layer rule: hold the layer key + this key</span>
+    <span style="--c: var(--remap)">Direct remap: this key always types another</span>
+    <span style="--c: var(--layerkey)">Layer key</span>
+  </div>
+
+  <div class="cols">
+    <section class="card" id="keyCard">
+      <h2 id="keyTitle">Click a key</h2>
+      <div id="keyBody" class="muted">
+        Click a broken key on the keyboard above, mark it as dead, then choose which working key should type it.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>All rules</h2>
+      <h3>Layer rules (hold <kbd id="lkName">CapsLock</kbd>)</h3>
+      <ul class="rules" id="layerRules"></ul>
+      <h3>Direct remaps (always on)</h3>
+      <ul class="rules" id="remapRules"></ul>
+
+      <h3>Layer key</h3>
+      <div class="row">
+        <select id="layerKey"></select>
+        <span class="muted">Hold it to use layer rules.</span>
+      </div>
+      <h3>Tap to toggle</h3>
+      <div class="row">
+        <input type="number" id="tapMs" min="0" max="5000" step="50"> <span>ms</span>
+        <span class="muted">A press and release this quick, with no other key, sends the layer key itself (toggles caps lock). 0 turns this off.</span>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+"use strict";
+
+// ThinkPad E15 (US) layout. Each row lists [name, width in keys]. Width
+// defaults to 1. null is a gap. Names match the names in config.json.
+const MAIN_ROWS = [
+  [["Esc"], ["F1"], ["F2"], ["F3"], ["F4"], ["F5"], ["F6"], ["F7"], ["F8"], ["F9"], ["F10"], ["F11"], ["F12"],
+   ["Home"], ["End"], ["Insert"], ["Delete"]],
+  [["`"], ["1"], ["2"], ["3"], ["4"], ["5"], ["6"], ["7"], ["8"], ["9"], ["0"], ["-"], ["="], ["Backspace", 2]],
+  [["Tab", 1.5], ["Q"], ["W"], ["E"], ["R"], ["T"], ["Y"], ["U"], ["I"], ["O"], ["P"], ["["], ["]"], ["\\", 1.5]],
+  [["CapsLock", 1.75], ["A"], ["S"], ["D"], ["F"], ["G"], ["H"], ["J"], ["K"], ["L"], [";"], ["'"], ["Enter", 2.25]],
+  [["LShift", 2.25], ["Z"], ["X"], ["C"], ["V"], ["B"], ["N"], ["M"], [","], ["."], ["/"], ["RShift", 2.75]],
+  [["Fn"], ["LCtrl", 1.25], ["LWin"], ["LAlt", 1.25], ["Space", 4.5], ["RAlt"], ["PrintScreen"], ["RCtrl"],
+   ["Left"], ["UpDown"], ["Right"]],
+];
+// Number pad: [name, column, row, width, height] in keys, column 0 = left edge of the pad.
+const NUMPAD = [
+  ["NumLock", 0, 1], ["NumDivide", 1, 1], ["NumMultiply", 2, 1], ["NumSubtract", 3, 1],
+  ["Num7", 0, 2], ["Num8", 1, 2], ["Num9", 2, 2], ["NumAdd", 3, 2, 1, 2],
+  ["Num4", 0, 3], ["Num5", 1, 3], ["Num6", 2, 3],
+  ["Num1", 0, 4], ["Num2", 1, 4], ["Num3", 2, 4], ["NumEnter", 3, 4, 1, 2],
+  ["Num0", 0, 5, 2], ["NumDecimal", 2, 5],
+];
+const NUMPAD_X = 15.5;
+
+const LABELS = {
+  Backspace: "⌫ Back", CapsLock: "Caps Lock", LShift: "Shift", RShift: "Shift", LCtrl: "Ctrl", RCtrl: "Ctrl",
+  LAlt: "Alt", RAlt: "Alt", LWin: "⊞", PrintScreen: "PrtSc", Insert: "Ins", Delete: "Del", Space: "",
+  Left: "←", Right: "→", Up: "↑", Down: "↓", NumLock: "Num Lk", NumDivide: "/", NumMultiply: "*",
+  NumSubtract: "−", NumAdd: "+", NumDecimal: ".", NumEnter: "Enter", Enter: "Enter ↵", Tab: "Tab ⇥",
+};
+for (let i = 0; i <= 9; i++) LABELS["Num" + i] = String(i);
+// Keys drawn on the board that map to a different config name.
+const ALIASES = { NumEnter: "Enter" };
+// Keys Windows never reports (Fn is handled inside the keyboard).
+const NO_VK = new Set(["Fn"]);
+
+const $ = (id) => document.getElementById(id);
+const token = location.pathname.replace(/^\/s\//, "");
+
+let keyNames = [];          // every name the app understands
+let saved = null;           // config as last loaded or saved
+let cfg = null;             // config being edited
+let selected = null;        // config name of the selected key
+let picking = null;         // {kind: "layer"|"remap", target}
+let defaults = null;        // built-in default config
+
+// ---------- helpers ----------
+
+const lower = (s) => String(s).toLowerCase();
+const same = (a, b) => lower(a) === lower(b);
+const canon = (name) => keyNames.find((k) => same(k, name)) || name;
+const label = (name) => LABELS[name] ?? name;
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const isDead = (name) => cfg.deadKeys.some((k) => same(k, name));
+const dirty = () => JSON.stringify(cfg) !== JSON.stringify(saved);
+
+function kbd(name) {
+  const k = document.createElement("kbd");
+  k.textContent = label(name) || name;
+  k.title = name;
+  return k;
+}
+
+function el(tag, props = {}, ...children) {
+  const e = document.createElement(tag);
+  Object.assign(e, props);
+  for (const c of children) e.append(c);
+  return e;
+}
+
+function showBanner(kind, text) {
+  const b = $("banner");
+  b.className = "banner " + kind;
+  b.textContent = text;
+  b.hidden = !text;
+}
+
+async function api(path, options = {}) {
+  const res = await fetch(path, {
+    ...options,
+    headers: { "X-DeadKeys-Token": token, "Content-Type": "application/json" },
+  });
+  let body;
+  try { body = await res.json(); } catch { body = { error: await res.text().catch(() => res.statusText) }; }
+  if (!res.ok) throw new Error(body.error || res.statusText);
+  return body;
+}
+
+// ---------- drawing ----------
+
+function buildBoard() {
+  const board = $("board");
+  board.innerHTML = "";
+  const place = (name, x, y, w = 1, h = 1) => {
+    // x, w in keys; y, h in rows (each row is two grid rows).
+    const style = `grid-column: ${Math.round(x * 4) + 1} / span ${Math.round(w * 4)}; grid-row: ${y * 2 + 1} / span ${h * 2}`;
+    if (name === "UpDown") {
+      addKey("Up", `grid-column: ${Math.round(x * 4) + 1} / span 4; grid-row: ${y * 2 + 1} / span 1`, true);
+      addKey("Down", `grid-column: ${Math.round(x * 4) + 1} / span 4; grid-row: ${y * 2 + 2} / span 1`, true);
+      return;
+    }
+    addKey(name, style, false);
+  };
+  MAIN_ROWS.forEach((row, y) => {
+    let x = 0;
+    for (const [name, w = 1] of row) {
+      if (name) place(name, x, y, w);
+      x += w;
+    }
+  });
+  for (const [name, x, y, w = 1, h = 1] of NUMPAD) place(name, NUMPAD_X + x, y, w, h);
+}
+
+function addKey(drawName, style, half) {
+  const b = document.createElement("button");
+  b.className = "key" + (half ? " half" : "");
+  b.style.cssText = style;
+  b.dataset.draw = drawName;
+  b.dataset.name = ALIASES[drawName] || drawName;
+  if (NO_VK.has(drawName)) {
+    b.classList.add("disabled");
+    b.title = "Fn is handled by the keyboard itself, so Windows never sees it.";
+  }
+  b.addEventListener("click", () => onKeyClick(b));
+  $("board").append(b);
+}
+
+function render() {
+  const layerKey = canon(cfg.layerKey);
+  for (const b of document.querySelectorAll(".key")) {
+    const name = b.dataset.name;
+    const layerTo = cfg.layer.find((r) => same(r.from, name));
+    const remapTo = cfg.remap.find((r) => same(r.from, name));
+    b.classList.toggle("dead", isDead(name));
+    b.classList.toggle("layerkey", same(name, layerKey));
+    b.classList.toggle("selected", selected !== null && same(name, selected));
+    b.innerHTML = "";
+    b.append(el("span", { className: "label", textContent: label(b.dataset.draw) }));
+    if (b.classList.contains("half")) continue;
+    const tags = el("span", { style: "display:flex; gap:2px; flex-wrap:wrap" });
+    if (same(name, layerKey)) tags.append(el("span", { className: "tag lk", textContent: "layer" }));
+    if (layerTo) tags.append(el("span", { className: "tag layer", textContent: label(layerTo.to) || layerTo.to, title: `Hold ${layerKey} + ${name} types ${layerTo.to}` }));
+    if (remapTo) tags.append(el("span", { className: "tag remap", textContent: label(remapTo.to) || remapTo.to, title: `${name} always types ${remapTo.to}` }));
+    b.append(tags);
+    let title = name;
+    if (isDead(name)) title += " (dead)";
+    if (layerTo) title += `\n${layerKey} + ${name} → ${layerTo.to}`;
+    if (remapTo) title += `\n${name} → ${remapTo.to}`;
+    if (!b.classList.contains("disabled")) b.title = title;
+  }
+
+  $("board").classList.toggle("picking", !!picking);
+  $("pickBanner").hidden = !picking;
+  if (picking) {
+    $("pickText").textContent = picking.kind === "layer"
+      ? `Click the key to hold with ${layerKey} to type ${picking.target}.  `
+      : `Click the key that should always type ${picking.target}.  `;
+  }
+
+  $("lkName").textContent = label(layerKey) || layerKey;
+  renderRuleList($("layerRules"), "layer", (r) => [kbd(layerKey), " + ", kbd(r.from), " types ", kbd(r.to)]);
+  renderRuleList($("remapRules"), "remap", (r) => [kbd(r.from), " types ", kbd(r.to)]);
+  renderSelected();
+
+  $("layerKey").value = canon(cfg.layerKey);
+  if (document.activeElement !== $("tapMs")) $("tapMs").value = cfg.tapTimeoutMs;
+  $("save").disabled = !dirty();
+  $("revert").disabled = !dirty() || !saved;
+}
+
+function renderRuleList(ul, section, describe) {
+  ul.innerHTML = "";
+  if (cfg[section].length === 0) {
+    ul.append(el("li", { className: "empty", textContent: "None yet." }));
+    return;
+  }
+  cfg[section].forEach((r, i) => {
+    const del = el("button", { className: "small danger", textContent: "Remove" });
+    del.addEventListener("click", () => { cfg[section].splice(i, 1); render(); });
+    ul.append(el("li", {}, el("span", { className: "what" }, ...describe(r)), del));
+  });
+}
+
+function renderSelected() {
+  const body = $("keyBody");
+  if (!selected) return;
+  const name = selected;
+  const layerKey = canon(cfg.layerKey);
+  $("keyTitle").textContent = "";
+  $("keyTitle").append("Key ", kbd(name));
+  body.className = "";
+  body.innerHTML = "";
+
+  if (same(name, layerKey)) {
+    body.append(el("p", { textContent: `This is the layer key. Hold it and press another key to use the layer rules. Change it under "Layer key".` }));
+    return;
+  }
+
+  const deadBox = el("input", { type: "checkbox", checked: isDead(name) });
+  deadBox.addEventListener("change", () => {
+    if (deadBox.checked) {
+      cfg.deadKeys.push(name);
+      // A dead key can't be pressed, so rules starting from it are useless.
+      cfg.layer = cfg.layer.filter((r) => !same(r.from, name));
+      cfg.remap = cfg.remap.filter((r) => !same(r.from, name));
+    } else {
+      cfg.deadKeys = cfg.deadKeys.filter((k) => !same(k, name));
+    }
+    render();
+  });
+  body.append(el("label", { className: "check" }, deadBox, "This key is dead (it doesn't work)"));
+
+  // How to type this key.
+  const typedBy = [
+    ...cfg.layer.filter((r) => same(r.to, name)).map((r) => ({ section: "layer", r })),
+    ...cfg.remap.filter((r) => same(r.to, name)).map((r) => ({ section: "remap", r })),
+  ];
+  body.append(el("h3", { textContent: `Ways to type ${name}` }));
+  const ways = el("ul", { className: "rules" });
+  if (typedBy.length === 0) {
+    ways.append(el("li", { className: "empty", textContent: isDead(name) ? "None yet. Add one below." : "Just press it." }));
+  }
+  for (const { section, r } of typedBy) {
+    const del = el("button", { className: "small danger", textContent: "Remove" });
+    del.addEventListener("click", () => {
+      cfg[section] = cfg[section].filter((x) => x !== r);
+      render();
+    });
+    const what = section === "layer" ? [kbd(layerKey), " + ", kbd(r.from)] : [kbd(r.from), " (direct)"];
+    ways.append(el("li", {}, el("span", { className: "what" }, ...what), del));
+  }
+  body.append(ways);
+
+  const addLayer = el("button", { textContent: `Add: hold ${label(layerKey) || layerKey} + a key` });
+  addLayer.addEventListener("click", () => startPick("layer", name));
+  const addRemap = el("button", { textContent: "Add: a spare key, always" });
+  addRemap.addEventListener("click", () => startPick("remap", name));
+  body.append(el("div", { className: "row" }, addLayer, addRemap));
+
+  // What this key does when pressed.
+  if (!isDead(name)) {
+    const own = [
+      ...cfg.layer.filter((r) => same(r.from, name)).map((r) => [kbd(layerKey), " + ", kbd(name), " types ", kbd(r.to)]),
+      ...cfg.remap.filter((r) => same(r.from, name)).map((r) => [kbd(name), " always types ", kbd(r.to)]),
+    ];
+    if (own.length) {
+      body.append(el("h3", { textContent: `What ${name} does` }));
+      const ul = el("ul", { className: "rules" });
+      for (const parts of own) ul.append(el("li", {}, el("span", { className: "what" }, ...parts)));
+      body.append(ul);
+    }
+  }
+}
+
+// ---------- interaction ----------
+
+function onKeyClick(b) {
+  if (b.classList.contains("disabled")) return;
+  const name = b.dataset.name;
+  if (picking) {
+    finishPick(name);
+    return;
+  }
+  selected = name;
+  render();
+}
+
+function startPick(kind, target) {
+  picking = { kind, target };
+  showBanner("", "");
+  render();
+}
+
+function finishPick(from) {
+  const { kind, target } = picking;
+  const layerKey = canon(cfg.layerKey);
+  let problem = "";
+  if (same(from, target)) problem = "A key can't type itself.";
+  else if (isDead(from)) problem = `${from} is dead, pick a key that works.`;
+  else if (same(from, layerKey)) problem = `${from} is the layer key.`;
+  else if (cfg[kind].some((r) => same(r.from, from))) {
+    const r = cfg[kind].find((r) => same(r.from, from));
+    problem = kind === "layer"
+      ? `${layerKey} + ${from} already types ${r.to}. Remove that rule first.`
+      : `${from} already always types ${r.to}. Remove that rule first.`;
+  }
+  if (problem) {
+    showBanner("err", problem);
+    return;
+  }
+  if (kind === "remap" && !confirm(`${from} will stop typing ${from} and type ${target} instead, everywhere. Continue?`)) {
+    return;
+  }
+  cfg[kind].push({ from: canon(from), to: canon(target) });
+  picking = null;
+  showBanner("", "");
+  render();
+}
+
+function cancelPick() {
+  picking = null;
+  showBanner("", "");
+  render();
+}
+
+async function save() {
+  $("save").disabled = true;
+  try {
+    const res = await api("/api/config", { method: "POST", body: JSON.stringify(cfg) });
+    saved = clone(res.config);
+    cfg = clone(res.config);
+    showBanner("ok", "Saved. The new rules are already active.");
+  } catch (e) {
+    showBanner("err", "Not saved:\n" + e.message);
+  }
+  render();
+}
+
+async function load() {
+  try {
+    const state = await api("/api/state");
+    keyNames = state.keys.map((k) => k.name);
+    defaults = state.defaults;
+    $("path").textContent = `${state.path}  ·  DeadKeys ${state.version}`;
+    const sel = $("layerKey");
+    sel.innerHTML = "";
+    for (const k of keyNames) sel.append(el("option", { value: k, textContent: k }));
+    saved = clone(state.config);
+    cfg = clone(state.config);
+    if (state.error) {
+      showBanner("err", `config.json has problems, so the defaults are shown instead. Saving will replace the file.\n\n${state.error}`);
+      saved = null; // make Save available
+    }
+    buildBoard();
+    render();
+  } catch (e) {
+    showBanner("err", "Could not load settings: " + e.message);
+  }
+}
+
+$("save").addEventListener("click", save);
+$("revert").addEventListener("click", () => { cfg = clone(saved); picking = null; showBanner("", ""); render(); });
+$("defaults").addEventListener("click", () => {
+  if (!confirm("Replace all rules and dead keys with the defaults? Nothing is saved until you click Save.")) return;
+  cfg = clone(defaults);
+  picking = null;
+  render();
+});
+$("pickCancel").addEventListener("click", cancelPick);
+$("layerKey").addEventListener("change", (e) => {
+  const k = e.target.value;
+  if (isDead(k)) {
+    showBanner("err", `${k} is marked dead, so it can't be the layer key.`);
+  } else if (cfg.layer.some((r) => same(r.from, k)) || cfg.remap.some((r) => same(r.from, k))) {
+    showBanner("err", `${k} already has a rule. Remove it before making ${k} the layer key.`);
+  } else {
+    cfg.layerKey = k;
+  }
+  render();
+});
+$("tapMs").addEventListener("input", (e) => {
+  const v = Number(e.target.value);
+  if (Number.isInteger(v) && v >= 0 && v <= 5000) { cfg.tapTimeoutMs = v; render(); }
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && picking) cancelPick(); });
+window.addEventListener("beforeunload", (e) => { if (cfg && dirty()) e.preventDefault(); });
+
+load();
+</script>
+</body>
+</html>
