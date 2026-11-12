@@ -39,6 +39,22 @@ remember. Change them in the settings page or in `config.json`.
 
 ## Install
 
+### With npx
+
+If you have [Node.js](https://nodejs.org) 18 or newer, run:
+
+```
+npx deadkeys
+```
+
+This downloads `deadkeys.exe` from the latest release, checks it against
+`SHA256SUMS.txt`, and starts it. The exe and `config.json` go in
+`%LOCALAPPDATA%\DeadKeys`, so your rules survive npm clearing its cache. Run
+the same command again to open the settings page. `npx deadkeys --debug`
+opens the debug console.
+
+### From the release
+
 1. Download `DeadKeys-<version>-windows-amd64.zip` from the
    [Releases](../../releases) page.
 2. Unzip it to a folder you can write to, for example
@@ -107,6 +123,10 @@ dead.
 Press `Win + R`, type `shell:startup`, press Enter, and put a shortcut to
 `deadkeys.exe` in that folder. DeadKeys then starts at login without admin
 rights, so it won't work inside admin programs (see above).
+
+If you installed with npx, make the shortcut run `npx -y deadkeys` instead,
+and set it to start minimized. A shortcut to the exe itself breaks on the
+next update, because each version lives in its own folder.
 
 ### Option B: Task Scheduler, as admin with no UAC prompt
 
@@ -240,6 +260,20 @@ Every push also uploads a test build under the **Actions** tab.
 git tag v0.1.0
 git push origin v0.1.0
 ```
+
+### Publishing to npm
+
+The npm package only holds a launcher that downloads `deadkeys.exe` from the
+release whose tag matches the package version. Publish it after the GitHub
+release is up, with `version` in `npm/package.json` set to the tag without
+the `v`:
+
+```sh
+cd npm
+npm publish
+```
+
+Check it with `npx deadkeys@0.1.0` on Windows afterwards.
 
 ### How it works
 

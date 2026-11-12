@@ -27,6 +27,18 @@ jobs:
       - run: go vet ./...
       - run: go test -race ./...
 
+  npm:
+    name: Check npm launcher
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --check npm/bin/deadkeys.js
+      - run: npm pack --dry-run
+        working-directory: npm
+
   build:
     name: Build deadkeys.exe
     runs-on: ubuntu-latest
