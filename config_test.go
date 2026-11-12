@@ -166,3 +166,7 @@ func TestSaveConfigReplaces(t *testing.T) {
 		t.Errorf("temp files left behind: %v", entries)
 	}
 }
+
+func writeFile(path, content string) error {
+	return os.WriteFile(path, []byte(content), 0o644)
+}
