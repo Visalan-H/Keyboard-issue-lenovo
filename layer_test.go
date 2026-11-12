@@ -44,25 +44,13 @@ func (h *harness) check(name string, down bool, act Action, swallow bool, want [
 	if act.Swallow != swallow {
 		h.t.Errorf("%s %s: swallow = %v, want %v", name, dir, act.Swallow, swallow)
 	}
-	got := strokeNames(act.Strokes())
+	got := StrokeNames(act.Strokes())
 	if want == nil {
 		want = []string{}
 	}
 	if !reflect.DeepEqual(got, want) {
 		h.t.Errorf("%s %s: sent %v, want %v", name, dir, got, want)
 	}
-}
-
-func strokeNames(s []Stroke) []string {
-	out := []string{}
-	for _, st := range s {
-		sign := "-"
-		if st.Down {
-			sign = "+"
-		}
-		out = append(out, sign+KeyName(st.VK))
-	}
-	return out
 }
 
 const (
@@ -281,7 +269,7 @@ func TestReleaseAll(t *testing.T) {
 	h := newHarness(t, DefaultConfig())
 	h.key("CapsLock", true, swallow)
 	h.key("Q", true, swallow, "+W")
-	got := strokeNames(h.e.ReleaseAll())
+	got := StrokeNames(h.e.ReleaseAll())
 	if !reflect.DeepEqual(got, []string{"-W"}) {
 		t.Errorf("ReleaseAll = %v, want [-W]", got)
 	}
