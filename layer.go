@@ -187,3 +187,16 @@ func (e *Engine) ReleaseAll() []Stroke {
 	e.layerHeld = 0
 	return out
 }
+
+// StrokeNames formats strokes as "+W" (press) and "-W" (release).
+func StrokeNames(s []Stroke) []string {
+	out := make([]string, len(s))
+	for i, st := range s {
+		sign := "-"
+		if st.Down {
+			sign = "+"
+		}
+		out[i] = sign + KeyName(st.VK)
+	}
+	return out
+}
