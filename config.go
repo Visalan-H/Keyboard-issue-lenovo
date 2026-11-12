@@ -78,6 +78,9 @@ func ParseConfig(data []byte) (Config, error) {
 	if err := dec.Decode(&cfg); err != nil {
 		return Config{}, fmt.Errorf("config.json is not valid: %w", err)
 	}
+	if dec.More() {
+		return Config{}, errors.New("config.json is not valid: extra text after the closing }")
+	}
 	if cfg.Version > ConfigVersion {
 		return Config{}, fmt.Errorf("config.json is version %d, but this build only understands up to %d", cfg.Version, ConfigVersion)
 	}
@@ -94,7 +97,27 @@ func ParseConfig(data []byte) (Config, error) {
 	if _, err := Compile(cfg); err != nil {
 		return Config{}, err
 	}
+	canonicalize(&cfg)
 	return cfg, nil
+}
+
+// canonicalize rewrites every key name in its standard spelling ("caps"
+// and "0x14" both become "CapsLock"), so the settings page can compare
+// names directly. cfg must already have passed Compile.
+func canonicalize(cfg *Config) {
+	name := func(s string) string {
+		vk, _ := ParseKey(s)
+		return KeyName(vk)
+	}
+	cfg.LayerKey = name(cfg.LayerKey)
+	for _, rules := range [][]Rule{cfg.Layer, cfg.Remap} {
+		for i := range rules {
+			rules[i] = Rule{name(rules[i].From), name(rules[i].To)}
+		}
+	}
+	for i, k := range cfg.DeadKeys {
+		cfg.DeadKeys[i] = name(k)
+	}
 }
 
 // Keymap is a checked Config turned into virtual-key codes, ready for

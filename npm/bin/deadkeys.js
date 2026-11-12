@@ -41,7 +41,10 @@ function get(url, redirects = 5) {
         res.on("end", () => resolve(Buffer.concat(chunks)));
         res.on("error", reject);
       })
-      .on("error", reject);
+      .on("error", reject)
+      .setTimeout(60000, function () {
+        this.destroy(new Error(`${url} stopped responding`));
+      });
   });
 }
 
@@ -99,9 +102,11 @@ async function main() {
   const args = ["--config", path.join(dir, "config.json"), ...process.argv.slice(2)];
   const child = spawn(exe, args, { detached: true, stdio: "ignore" });
   child.on("error", (err) => fail(`could not start ${exe}: ${err.message}`));
-  child.unref();
-  console.log("DeadKeys is running. Look for the blue keycap in the tray.");
-  console.log(`Files: ${dir}`);
+  child.on("spawn", () => {
+    child.unref();
+    console.log("DeadKeys is running. Look for the blue keycap in the tray.");
+    console.log(`Files: ${dir}`);
+  });
 }
 
 main();

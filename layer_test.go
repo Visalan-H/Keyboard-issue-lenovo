@@ -278,3 +278,12 @@ func TestReleaseAll(t *testing.T) {
 	}
 	h.key("Q", false, pass)
 }
+
+func TestKeyPressedWhilePausedStopsTap(t *testing.T) {
+	h := newHarness(t, DefaultConfig())
+	h.key("CapsLock", true, swallow)
+	h.e.SetPaused(true)
+	h.key("Q", true, pass)
+	h.key("Q", false, pass)
+	h.key("CapsLock", false, swallow) // not a tap: Q was pressed
+}

@@ -205,7 +205,7 @@
   .setting .label { font-weight: 600; }
   .setting .help { color: var(--ink-2); font-size: 13px; }
   .setting .ctl { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .setting .msg { color: var(--red); font-size: 13px; margin-top: 4px; }
+  .setting .msg { color: var(--warn); font-size: 13px; font-weight: 600; margin-top: 4px; max-width: 46ch; }
   .path { font-size: 13px; color: var(--ink-2); overflow-wrap: anywhere; }
   @media (max-width: 680px) { .setting { grid-template-columns: 1fr; } }
   select, input[type=number] {
@@ -283,9 +283,12 @@
         </div>
         <div class="setting">
           <div><div class="label">Quick tap</div><div class="help">What a tap on the hold key does when you don't press anything else.</div></div>
-          <div class="ctl">
-            <label class="check"><input type="checkbox" id="tapOn"> <span id="tapLabel">Still works as Caps Lock</span></label>
-            <span id="tapMsWrap">if released within <input type="number" id="tapMs" min="50" max="5000" step="50" aria-label="Quick tap time in milliseconds"> ms</span>
+          <div>
+            <div class="ctl">
+              <label class="check"><input type="checkbox" id="tapOn"> <span id="tapLabel">Still works as Caps Lock</span></label>
+              <span id="tapMsWrap">if released within <input type="number" id="tapMs" min="50" max="5000" step="50" aria-label="Quick tap time in milliseconds"> ms</span>
+            </div>
+            <div class="msg" id="tapMsg"></div>
           </div>
         </div>
         <div class="setting">
@@ -350,6 +353,8 @@ const ALIASES = { NumEnter: "Enter" };
 const NO_VK = new Set(["Fn"]);
 // Keys worth suggesting as the one to hold with the hold key.
 const SUGGESTABLE = /^([A-Z0-9]|[`\-=[\]\\;',./])$/;
+// Keys you rarely type on their own, so holding one costs nothing.
+const GOOD_HOLD = ["CapsLock", "Tab", "RCtrl", "Menu", "Insert", "PrintScreen", "ScrollLock", "Pause"];
 // KeyboardEvent.code -> config name, so a real key press can pick a key.
 const CODES = {
   Backquote: "`", Minus: "-", Equal: "=", BracketLeft: "[", BracketRight: "]", Backslash: "\\",
@@ -360,6 +365,8 @@ const CODES = {
   Delete: "Delete", Home: "Home", End: "End", PrintScreen: "PrintScreen", CapsLock: "CapsLock",
   NumLock: "NumLock", NumpadDivide: "NumDivide", NumpadMultiply: "NumMultiply",
   NumpadSubtract: "NumSubtract", NumpadAdd: "NumAdd", NumpadDecimal: "NumDecimal",
+  MetaRight: "RWin", ContextMenu: "Menu", ScrollLock: "ScrollLock", Pause: "Pause",
+  PageUp: "PageUp", PageDown: "PageDown",
 };
 
 const $ = (id) => document.getElementById(id);
@@ -423,6 +430,7 @@ function toast(text, bad = false, undo = false) {
 
 // change runs fn on the config, re-renders, and offers Undo with message.
 function change(message, fn) {
+  $("layerKeyMsg").textContent = "";
   const before = clone(cfg);
   fn();
   undoSnap = before;
@@ -431,12 +439,18 @@ function change(message, fn) {
 }
 
 async function api(path, options = {}) {
-  const res = await fetch(path, {
-    ...options,
-    headers: { "X-DeadKeys-Token": token, "Content-Type": "application/json" },
-  });
+  let res, text;
+  try {
+    res = await fetch(path, {
+      ...options,
+      headers: { "X-DeadKeys-Token": token, "Content-Type": "application/json" },
+    });
+    text = await res.text();
+  } catch {
+    throw new Error("Can't reach DeadKeys. It may have been closed. Start it again, then open Settings from the tray icon.");
+  }
   let body;
-  try { body = await res.json(); } catch { body = { error: await res.text().catch(() => res.statusText) }; }
+  try { body = JSON.parse(text); } catch { body = { error: text.trim() || res.statusText }; }
   if (!res.ok) throw new Error(body.error || res.statusText);
   return body;
 }
@@ -484,20 +498,19 @@ function toggleDead(name) {
     toast(`${longName(name)} is the key you hold. Change it under More settings first.`, true);
     return;
   }
-  if (isDead(name)) {
-    change(`${longName(name)} marked as working.`, () => {
-      cfg.deadKeys = cfg.deadKeys.filter((k) => !same(k, name));
-      cfg.layer = cfg.layer.filter((r) => !same(r.to, name));
-      cfg.remap = cfg.remap.filter((r) => !same(r.to, name));
-    });
-  } else {
-    change(`${longName(name)} marked as not working.`, () => {
-      cfg.deadKeys.push(canon(name));
-      // A dead key can't be pressed, so shortcuts that start from it are useless.
-      cfg.layer = cfg.layer.filter((r) => !same(r.from, name));
-      cfg.remap = cfg.remap.filter((r) => !same(r.from, name));
-    });
-  }
+  // Marking a key as working drops the shortcuts that type it; marking it
+  // dead drops the ones that start from it, since it can't be pressed.
+  const nowDead = !isDead(name);
+  const field = nowDead ? "from" : "to";
+  const gone = [...cfg.layer, ...cfg.remap].filter((r) => same(r[field], name)).length;
+  let msg = `${longName(name)} marked as ${nowDead ? "not working" : "working"}.`;
+  if (gone) msg += ` Removed ${gone === 1 ? "1 shortcut" : gone + " shortcuts"} ${nowDead ? "that used it" : "for it"}.`;
+  change(msg, () => {
+    if (nowDead) cfg.deadKeys.push(canon(name));
+    else cfg.deadKeys = cfg.deadKeys.filter((k) => !same(k, name));
+    cfg.layer = cfg.layer.filter((r) => !same(r[field], name));
+    cfg.remap = cfg.remap.filter((r) => !same(r[field], name));
+  });
 }
 
 // ---------- drawing ----------
@@ -571,6 +584,7 @@ function render() {
     if (layerTo) title += `\nHold ${hkName} + ${longName(name)} types ${longName(layerTo.to)}`;
     if (remapTo) title += `\n${longName(name)} always types ${longName(remapTo.to)}`;
     b.title = title;
+    b.setAttribute("aria-label", title.replaceAll("\n", ". "));
   }
   $("board").classList.toggle("picking", !!picking);
 
@@ -588,7 +602,7 @@ function render() {
   renderSettings();
 
   const isDirty = dirty();
-  $("save").disabled = !isDirty;
+  $("save").disabled = !isDirty || saving;
   $("revert").disabled = !isDirty;
   $("status").textContent = isDirty ? "Unsaved changes" : "Saved";
   $("status").classList.toggle("dirty", isDirty);
@@ -612,7 +626,10 @@ function renderFixes() {
   if (targets.length === 0) {
     lede.textContent = "Mark a key above and it shows up here.";
   } else if (todo.length) {
-    lede.textContent = `${todo.length} of ${targets.length} still ${todo.length === 1 ? "needs" : "need"} a shortcut.`;
+    const n = cfg.deadKeys.length;
+    lede.textContent = todo.length === n
+      ? `${n === 1 ? "This key needs" : "These keys need"} a shortcut. Accept the suggestion or choose your own.`
+      : `${todo.length} of ${n} still ${todo.length === 1 ? "needs" : "need"} a shortcut.`;
   } else if (ex) {
     lede.append("Hold ", kbd(hk), " and press ", kbd(ex.from), " to type ", kbd(ex.to), ". The same goes for each key below.");
   }
@@ -735,20 +752,24 @@ function codeToName(code) {
 
 // ---------- saving ----------
 
+let saving = false;
 async function save() {
-  if (!dirty()) return;
+  if (saving || !dirty()) return;
+  saving = true;
   $("save").disabled = true;
+  const sent = JSON.stringify(cfg);
   try {
-    const res = await api("/api/config", { method: "POST", body: JSON.stringify(cfg) });
+    const res = await api("/api/config", { method: "POST", body: sent });
     saved = clone(res.config);
-    cfg = clone(res.config);
+    // Keep anything changed while the save was on its way.
+    if (JSON.stringify(cfg) === sent) { cfg = clone(res.config); undoSnap = null; }
     showBanner("");
     toast("Saved. The shortcuts work now.");
-    undoSnap = null;
   } catch (e) {
-    showBanner("Not saved. Fix this and save again:\n" + e.message);
+    showBanner("Not saved. " + e.message);
     toast("Not saved. See the message at the top.", true);
   }
+  saving = false;
   render();
 }
 
@@ -760,7 +781,11 @@ async function load() {
     $("path").textContent = `${state.path} (DeadKeys ${state.version})`;
     const sel = $("layerKey");
     sel.innerHTML = "";
-    for (const k of keyNames) sel.append(el("option", { value: k, textContent: longName(k) }));
+    const good = el("optgroup", { label: "Good choices" });
+    const other = el("optgroup", { label: "Other keys" });
+    for (const k of GOOD_HOLD) if (keyNames.includes(k)) good.append(el("option", { value: k, textContent: longName(k) }));
+    for (const k of keyNames) if (!GOOD_HOLD.includes(k)) other.append(el("option", { value: k, textContent: longName(k) }));
+    sel.append(good, other);
     saved = clone(state.config);
     cfg = clone(state.config);
     if (cfg.tapTimeoutMs > 0) lastTap = cfg.tapTimeoutMs;
@@ -779,14 +804,16 @@ $("save").addEventListener("click", save);
 $("revert").addEventListener("click", () => {
   change("Changes discarded.", () => { cfg = clone(saved || defaults); picking = null; });
 });
-$("toastUndo").addEventListener("click", () => {
+function undo() {
   if (!undoSnap) return;
   cfg = undoSnap;
   undoSnap = null;
   picking = null;
-  $("toast").hidden = true;
+  $("layerKeyMsg").textContent = "";
+  toast("Undone.");
   render();
-});
+}
+$("toastUndo").addEventListener("click", undo);
 
 let resetArmed = 0;
 $("defaults").addEventListener("click", (e) => {
@@ -813,29 +840,62 @@ $("layerKey").addEventListener("change", (e) => {
   $("layerKeyMsg").textContent = msg;
   if (msg) { render(); return; }
   change(`You now hold ${longName(k)}.`, () => { cfg.layerKey = k; });
+  if (SUGGESTABLE.test(k) || k === "Space" || k === "Enter" || k === "Backspace") {
+    $("layerKeyMsg").textContent = `${longName(k)} only types when tapped on its own, so fast typing may lose it. A key from "Good choices" is safer.`;
+  }
 });
 $("tapOn").addEventListener("change", (e) => {
   change("", () => { cfg.tapTimeoutMs = e.target.checked ? lastTap : 0; });
 });
+const tapOk = (v) => Number.isInteger(v) && v >= 50 && v <= 5000;
 $("tapMs").addEventListener("input", (e) => {
   const v = Number(e.target.value);
-  if (Number.isInteger(v) && v >= 50 && v <= 5000) { cfg.tapTimeoutMs = lastTap = v; render(); }
+  $("tapMsg").textContent = tapOk(v) ? "" : "Use a number from 50 to 5000.";
+  if (tapOk(v)) { cfg.tapTimeoutMs = lastTap = v; render(); }
+});
+$("tapMs").addEventListener("blur", (e) => {
+  e.target.value = cfg.tapTimeoutMs || lastTap;
+  $("tapMsg").textContent = "";
 });
 
+const MODIFIERS = new Set(["LShift", "RShift", "LCtrl", "RCtrl", "LAlt", "RAlt", "LWin", "RWin"]);
 document.addEventListener("keydown", (e) => {
-  if ((e.ctrlKey || e.metaKey) && lower(e.key) === "s") {
+  const t = e.target;
+  const typing = t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement || t instanceof HTMLInputElement;
+  if ((e.ctrlKey || e.metaKey) && !e.altKey && lower(e.key) === "s") {
     e.preventDefault();
     save();
     return;
   }
-  if (!picking) return;
+  if ((e.ctrlKey || e.metaKey) && !e.altKey && lower(e.key) === "z" && !typing && undoSnap) {
+    e.preventDefault();
+    undo();
+    return;
+  }
+  if (!picking || !cfg) return;
   if (e.key === "Escape") { cancelPick(); return; }
-  const t = e.target;
-  if (t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement || t instanceof HTMLInputElement) return;
+  if (typing || e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;
   const name = codeToName(e.code);
-  if (!name) return;
+  // Modifiers are easy to press by accident; click them on the board instead.
+  if (!name || MODIFIERS.has(name)) return;
+  // Enter and Space still press a focused button, like Cancel.
+  if ((name === "Enter" || name === "Space") && t instanceof HTMLButtonElement) return;
   e.preventDefault();
   tryPick(name);
+});
+// Coming back to the tab: if nothing is unsaved here, show what's on disk now
+// (another tab may have saved, or the file was edited by hand).
+document.addEventListener("visibilitychange", async () => {
+  if (document.hidden || !cfg || !saved || dirty() || picking || saving) return;
+  try {
+    const state = await api("/api/state");
+    if (state.error || dirty() || JSON.stringify(state.config) === JSON.stringify(saved)) return;
+    saved = clone(state.config);
+    cfg = clone(state.config);
+    undoSnap = null;
+    render();
+    toast("Updated with changes saved elsewhere.");
+  } catch {}
 });
 window.addEventListener("beforeunload", (e) => { if (cfg && dirty()) e.preventDefault(); });
 

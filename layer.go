@@ -113,6 +113,12 @@ func (e *Engine) Handle(ev Event) Action {
 		return act
 	}
 
+	if e.layerHeld != 0 {
+		// Any other key, even while paused, means the layer key was
+		// held on purpose, so its release must not count as a tap.
+		e.layerUsed = true
+	}
+
 	if e.paused.Load() {
 		e.passed[ev.VK] = true
 		return act
@@ -127,7 +133,6 @@ func (e *Engine) Handle(ev Event) Action {
 	}
 
 	if e.layerHeld != 0 {
-		e.layerUsed = true
 		if target, ok := km.Layer[ev.VK]; ok {
 			return e.press(ev.VK, target)
 		}
