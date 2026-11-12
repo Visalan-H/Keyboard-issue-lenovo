@@ -1,0 +1,30 @@
+{
+  "name": "deadkeys",
+  "version": "0.1.0",
+  "description": "Type the keys a broken laptop keyboard can't, using CapsLock and spare keys. Windows only.",
+  "bin": {
+    "deadkeys": "bin/deadkeys.js"
+  },
+  "files": [
+    "bin/"
+  ],
+  "os": [
+    "win32"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Visalan-H/Keyboard-issue-lenovo.git"
+  },
+  "homepage": "https://github.com/Visalan-H/Keyboard-issue-lenovo#readme",
+  "keywords": [
+    "keyboard",
+    "remap",
+    "broken-keys",
+    "capslock",
+    "windows"
+  ],
+  "license": "MIT"
+}
