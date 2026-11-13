@@ -42,7 +42,9 @@ npx deadkeys
 
 Or download `deadkeys.exe` from [Releases](../../releases) and run it.
 
-Then click the keycap icon in the tray to open the settings page.
+The settings page opens on first run. Click the keys that don't work, accept
+the suggested shortcuts and save. Later, click the keycap icon in the tray to
+open it again.
 
 Windows only. The settings page draws the ThinkPad E15 (US) keyboard, but the
 shortcuts work on any laptop.

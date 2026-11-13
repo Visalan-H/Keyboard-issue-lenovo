@@ -1,6 +1,6 @@
 {
   "name": "deadkeys",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Type the keys a broken laptop keyboard can't, using CapsLock and spare keys. Windows only.",
   "bin": {
     "deadkeys": "bin/deadkeys.js"

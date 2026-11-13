@@ -26,9 +26,14 @@ leaves your real modifier keys alone:
 
 A quick tap of CapsLock on its own still toggles caps lock.
 
-## Default rules
+## First run
 
-The defaults fit a ThinkPad E15 whose `2 W S X` and `O 9` keys are dead.
+A fresh install has no rules. The first time DeadKeys starts, it opens the
+settings page. Click the keys that don't work, accept the shortcut it suggests
+for each, and save.
+
+For example, a ThinkPad E15 whose `2 W S X` and `O 9` keys are dead ends up
+with these:
 
 | Hold CapsLock + | Types |
 | --------------- | ----- |
@@ -173,7 +178,7 @@ days**. Both are on by default and would stop DeadKeys on a laptop.
 
 The settings page edits this file for you, but you can also edit it by hand.
 It lives next to `deadkeys.exe` (or pass `--config path\to\file.json`). If it's
-missing, DeadKeys writes the defaults. After editing by hand, quit and restart
+missing, DeadKeys writes an empty one and opens the settings page. After editing by hand, quit and restart
 DeadKeys (right-click the tray icon, **Quit**). If the file has a mistake,
 DeadKeys tells you what's wrong and which rule it's on. Saving from the
 settings page rewrites key names in their standard spelling (`caps` becomes

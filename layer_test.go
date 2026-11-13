@@ -5,6 +5,14 @@ import (
 	"testing"
 )
 
+// e15Config is the setup for a ThinkPad E15 whose 2 W S X O 9 keys are
+// dead. Most engine tests use it.
+func e15Config() Config {
+	cfg := DefaultConfig()
+	cfg.Layer = []Rule{{"Q", "W"}, {"A", "S"}, {"Z", "X"}, {"I", "O"}, {"1", "2"}, {"8", "9"}}
+	cfg.DeadKeys = []string{"2", "W", "S", "X", "O", "9"}
+	return cfg
+}
 // harness feeds events to an engine and checks what comes out.
 type harness struct {
 	t   *testing.T
@@ -59,7 +67,7 @@ const (
 )
 
 func TestUnmappedKeysPassThrough(t *testing.T) {
-	h := newHarness(t, DefaultConfig())
+	h := newHarness(t, e15Config())
 	h.key("E", true, pass)
 	h.key("E", false, pass)
 	h.key("Q", true, pass) // Q is only mapped inside the layer
@@ -67,7 +75,7 @@ func TestUnmappedKeysPassThrough(t *testing.T) {
 }
 
 func TestLayerMapsKeys(t *testing.T) {
-	h := newHarness(t, DefaultConfig())
+	h := newHarness(t, e15Config())
 	h.key("CapsLock", true, swallow)
 	h.key("Q", true, swallow, "+W")
 	h.key("Q", false, swallow, "-W")
@@ -86,7 +94,7 @@ func TestLayerMapsKeys(t *testing.T) {
 
 func TestShiftPassesThroughSoItApplies(t *testing.T) {
 	// Shift + CapsLock + 1 must send only 2; the real Shift turns it into @.
-	h := newHarness(t, DefaultConfig())
+	h := newHarness(t, e15Config())
 	h.key("LShift", true, pass)
 	h.key("CapsLock", true, swallow)
 	h.key("1", true, swallow, "+2")
@@ -96,7 +104,7 @@ func TestShiftPassesThroughSoItApplies(t *testing.T) {
 }
 
 func TestShiftAutoRepeatDoesNotBlockTap(t *testing.T) {
-	h := newHarness(t, DefaultConfig())
+	h := newHarness(t, e15Config())
 	h.key("LShift", true, pass)
 	h.key("CapsLock", true, swallow)
 	h.key("LShift", true, pass) // auto-repeat of the held Shift
@@ -106,7 +114,7 @@ func TestShiftAutoRepeatDoesNotBlockTap(t *testing.T) {
 }
 
 func TestAutoRepeat(t *testing.T) {
-	h := newHarness(t, DefaultConfig())
+	h := newHarness(t, e15Config())
 	h.key("CapsLock", true, swallow)
 	h.key("CapsLock", true, swallow) // CapsLock auto-repeat
 	h.key("Q", true, swallow, "+W")
@@ -117,7 +125,7 @@ func TestAutoRepeat(t *testing.T) {
 }
 
 func TestReleasingLayerKeyFirstDoesNotStickKeys(t *testing.T) {
-	h := newHarness(t, DefaultConfig())
+	h := newHarness(t, e15Config())
 	h.key("CapsLock", true, swallow)
 	h.key("Q", true, swallow, "+W")
 	h.key("CapsLock", false, swallow)
@@ -130,7 +138,7 @@ func TestReleasingLayerKeyFirstDoesNotStickKeys(t *testing.T) {
 func TestKeyHeldBeforeLayerIsLeftAlone(t *testing.T) {
 	// Q is pressed (and passed through) before CapsLock goes down. Its
 	// repeats and release must pass too, or the app would see Q stuck.
-	h := newHarness(t, DefaultConfig())
+	h := newHarness(t, e15Config())
 	h.key("Q", true, pass)
 	h.key("CapsLock", true, swallow)
 	h.key("Q", true, pass)
@@ -141,21 +149,21 @@ func TestKeyHeldBeforeLayerIsLeftAlone(t *testing.T) {
 }
 
 func TestCapsLockTap(t *testing.T) {
-	h := newHarness(t, DefaultConfig())
+	h := newHarness(t, e15Config())
 	h.key("CapsLock", true, swallow)
 	h.wait(120)
 	h.key("CapsLock", false, swallow, "+CapsLock", "-CapsLock")
 }
 
 func TestCapsLockHoldTooLongIsNotATap(t *testing.T) {
-	h := newHarness(t, DefaultConfig())
+	h := newHarness(t, e15Config())
 	h.key("CapsLock", true, swallow)
 	h.wait(301)
 	h.key("CapsLock", false, swallow)
 }
 
 func TestCapsLockRepeatDoesNotRestartTapTimer(t *testing.T) {
-	h := newHarness(t, DefaultConfig())
+	h := newHarness(t, e15Config())
 	h.key("CapsLock", true, swallow)
 	h.wait(250)
 	h.key("CapsLock", true, swallow)
@@ -164,7 +172,7 @@ func TestCapsLockRepeatDoesNotRestartTapTimer(t *testing.T) {
 }
 
 func TestCapsLockWithKeyIsNotATap(t *testing.T) {
-	h := newHarness(t, DefaultConfig())
+	h := newHarness(t, e15Config())
 	h.key("CapsLock", true, swallow)
 	h.key("E", true, pass)
 	h.key("E", false, pass)
@@ -172,7 +180,7 @@ func TestCapsLockWithKeyIsNotATap(t *testing.T) {
 }
 
 func TestTapTimeoutZeroTurnsTapOff(t *testing.T) {
-	cfg := DefaultConfig()
+	cfg := e15Config()
 	cfg.TapTimeoutMs = 0
 	h := newHarness(t, cfg)
 	h.key("CapsLock", true, swallow)
@@ -180,7 +188,7 @@ func TestTapTimeoutZeroTurnsTapOff(t *testing.T) {
 }
 
 func TestTapTimerSurvivesClockWrap(t *testing.T) {
-	h := newHarness(t, DefaultConfig())
+	h := newHarness(t, e15Config())
 	h.now = 0xFFFFFFFF - 50
 	h.key("CapsLock", true, swallow)
 	h.wait(100) // wraps past zero
@@ -188,7 +196,7 @@ func TestTapTimerSurvivesClockWrap(t *testing.T) {
 }
 
 func TestDirectRemap(t *testing.T) {
-	cfg := DefaultConfig()
+	cfg := e15Config()
 	cfg.Remap = []Rule{{"Insert", "S"}, {"Q", "O"}}
 	h := newHarness(t, cfg)
 	h.key("Insert", true, swallow, "+S")
@@ -209,7 +217,7 @@ func TestDirectRemap(t *testing.T) {
 }
 
 func TestInjectedEventsPassThrough(t *testing.T) {
-	h := newHarness(t, DefaultConfig())
+	h := newHarness(t, e15Config())
 	h.key("CapsLock", true, swallow)
 	for _, down := range []bool{true, false} {
 		act := h.e.Handle(Event{VK: 'Q', Down: down, Injected: true, Time: h.now})
@@ -222,7 +230,7 @@ func TestInjectedEventsPassThrough(t *testing.T) {
 }
 
 func TestPause(t *testing.T) {
-	h := newHarness(t, DefaultConfig())
+	h := newHarness(t, e15Config())
 	h.key("CapsLock", true, swallow)
 	h.key("Q", true, swallow, "+W")
 	h.e.SetPaused(true)
@@ -242,11 +250,11 @@ func TestPause(t *testing.T) {
 }
 
 func TestKeymapSwapWhileHeld(t *testing.T) {
-	h := newHarness(t, DefaultConfig())
+	h := newHarness(t, e15Config())
 	h.key("CapsLock", true, swallow)
 	h.key("Q", true, swallow, "+W")
 
-	cfg := DefaultConfig()
+	cfg := e15Config()
 	cfg.LayerKey = "RAlt"
 	cfg.Layer = []Rule{{"Q", "X"}}
 	km, err := Compile(cfg)
@@ -266,7 +274,7 @@ func TestKeymapSwapWhileHeld(t *testing.T) {
 }
 
 func TestReleaseAll(t *testing.T) {
-	h := newHarness(t, DefaultConfig())
+	h := newHarness(t, e15Config())
 	h.key("CapsLock", true, swallow)
 	h.key("Q", true, swallow, "+W")
 	got := StrokeNames(h.e.ReleaseAll())
@@ -280,7 +288,7 @@ func TestReleaseAll(t *testing.T) {
 }
 
 func TestKeyPressedWhilePausedStopsTap(t *testing.T) {
-	h := newHarness(t, DefaultConfig())
+	h := newHarness(t, e15Config())
 	h.key("CapsLock", true, swallow)
 	h.e.SetPaused(true)
 	h.key("Q", true, pass)

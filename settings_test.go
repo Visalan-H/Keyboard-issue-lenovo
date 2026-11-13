@@ -79,7 +79,7 @@ func TestSettingsStateAndSave(t *testing.T) {
 	if err := json.NewDecoder(res.Body).Decode(&state); err != nil {
 		t.Fatal(err)
 	}
-	if state.Error != "" || len(state.Config.Layer) != 6 || len(state.Keys) < 100 {
+	if state.Error != "" || len(state.Config.Layer) != 0 || len(state.Keys) < 100 {
 		t.Fatalf("unexpected state: error %q, %d layer rules, %d keys", state.Error, len(state.Config.Layer), len(state.Keys))
 	}
 
@@ -125,8 +125,8 @@ func TestSettingsReportsBrokenConfigFile(t *testing.T) {
 	var state stateResponse
 	res := request(t, "GET", srv.URL+"/api/state", s.token, "")
 	json.NewDecoder(res.Body).Decode(&state)
-	if state.Error == "" || len(state.Config.Layer) != 6 {
-		t.Errorf("want an error and the defaults, got %q and %d rules", state.Error, len(state.Config.Layer))
+	if state.Error == "" || len(state.Config.Layer) != 0 || state.Config.LayerKey != "CapsLock" {
+		t.Errorf("want an error and the defaults, got %q and %+v", state.Error, state.Config)
 	}
 }
 
