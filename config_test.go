@@ -59,9 +59,8 @@ func TestDefaultConfigCompiles(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := map[uint32]uint32{'Q': 'W', 'A': 'S', 'Z': 'X', 'I': 'O', '1': '2', '8': '9'}
-	if !reflect.DeepEqual(km.Layer, want) {
-		t.Errorf("layer = %v, want %v", km.Layer, want)
+	if len(km.Layer) != 0 || len(km.Remap) != 0 {
+		t.Errorf("defaults should have no rules, got layer %v, remap %v", km.Layer, km.Remap)
 	}
 	if km.LayerVK != vkCapital || km.TapTimeout != 300 {
 		t.Errorf("layer key %#x, tap %d", km.LayerVK, km.TapTimeout)

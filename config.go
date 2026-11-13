@@ -45,22 +45,16 @@ type Rule struct {
 	To   string `json:"to"`
 }
 
-// DefaultConfig is used when there is no config.json.
+// DefaultConfig is used when there is no config.json. It has no rules:
+// the user marks their own dead keys on the settings page.
 func DefaultConfig() Config {
 	return Config{
 		Version:      ConfigVersion,
 		LayerKey:     "CapsLock",
 		TapTimeoutMs: 300,
-		Layer: []Rule{
-			{"Q", "W"},
-			{"A", "S"},
-			{"Z", "X"},
-			{"I", "O"},
-			{"1", "2"},
-			{"8", "9"},
-		},
-		Remap:    []Rule{},
-		DeadKeys: []string{"2", "W", "S", "X", "O", "9"},
+		Layer:        []Rule{},
+		Remap:        []Rule{},
+		DeadKeys:     []string{},
 	}
 }
 
