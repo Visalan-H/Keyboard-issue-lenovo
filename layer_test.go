@@ -13,6 +13,7 @@ func e15Config() Config {
 	cfg.DeadKeys = []string{"2", "W", "S", "X", "O", "9"}
 	return cfg
 }
+
 // harness feeds events to an engine and checks what comes out.
 type harness struct {
 	t   *testing.T
