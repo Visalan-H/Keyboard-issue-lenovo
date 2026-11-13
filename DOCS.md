@@ -122,9 +122,14 @@ The page draws the ThinkPad E15 keyboard.
 3. Click **Save** (or press Ctrl+S). The new rules work straight away; no
    restart needed. Type in the **Try it** box to check them.
 
-Every change can be undone from the message at the bottom of the page.
-**More settings** holds the hold key, the quick-tap time and **Reset to
-defaults**.
+Every change can be undone from the message at the bottom of the page, or
+with Ctrl+Z. **More settings** holds the hold key, the quick-tap time and
+**Reset to defaults**. For the hold key, pick one you rarely type on its own
+(the list puts those first): a letter or Space only types when tapped, so fast
+typing can lose it.
+
+If the page is open in two tabs, saving in one updates the other when you
+switch back to it.
 
 On the keyboard, red keys are dead, a green letter shows what a key types
 while you hold Caps Lock, and a purple letter marks a spare key.
@@ -170,7 +175,9 @@ The settings page edits this file for you, but you can also edit it by hand.
 It lives next to `deadkeys.exe` (or pass `--config path\to\file.json`). If it's
 missing, DeadKeys writes the defaults. After editing by hand, quit and restart
 DeadKeys (right-click the tray icon, **Quit**). If the file has a mistake,
-DeadKeys tells you what's wrong and which line of rules it's on.
+DeadKeys tells you what's wrong and which rule it's on. Saving from the
+settings page rewrites key names in their standard spelling (`caps` becomes
+`CapsLock`).
 
 ```json
 {

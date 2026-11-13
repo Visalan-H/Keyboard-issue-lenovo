@@ -170,3 +170,27 @@ func TestSaveConfigReplaces(t *testing.T) {
 func writeFile(path, content string) error {
 	return os.WriteFile(path, []byte(content), 0o644)
 }
+
+func TestParseConfigCanonicalNames(t *testing.T) {
+	cfg, err := ParseConfig([]byte(`{"layerKey": "caps", "layer": [{"from": "q", "to": "0x57"}],
+		"remap": [{"from": "ins", "to": "numenter"}], "deadKeys": ["w", "87"]}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := Config{
+		Version: ConfigVersion, LayerKey: "CapsLock", TapTimeoutMs: 300,
+		Layer: []Rule{{"Q", "W"}}, Remap: []Rule{{"Insert", "Enter"}}, DeadKeys: []string{"W", "W"},
+	}
+	if !reflect.DeepEqual(cfg, want) {
+		t.Errorf("got %+v\nwant %+v", cfg, want)
+	}
+}
+
+func TestParseConfigRejectsTrailingText(t *testing.T) {
+	if _, err := ParseConfig([]byte(`{"version": 1} {"version": 1}`)); err == nil {
+		t.Error("want an error for two JSON objects")
+	}
+	if _, err := ParseConfig([]byte("{\"version\": 1}\n\n")); err != nil {
+		t.Errorf("trailing whitespace should be fine: %v", err)
+	}
+}
