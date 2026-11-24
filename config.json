@@ -2,39 +2,7 @@
   "version": 1,
   "layerKey": "CapsLock",
   "tapTimeoutMs": 300,
-  "layer": [
-    {
-      "from": "Q",
-      "to": "W"
-    },
-    {
-      "from": "A",
-      "to": "S"
-    },
-    {
-      "from": "Z",
-      "to": "X"
-    },
-    {
-      "from": "I",
-      "to": "O"
-    },
-    {
-      "from": "1",
-      "to": "2"
-    },
-    {
-      "from": "8",
-      "to": "9"
-    }
-  ],
+  "layer": [],
   "remap": [],
-  "deadKeys": [
-    "2",
-    "W",
-    "S",
-    "X",
-    "O",
-    "9"
-  ]
+  "deadKeys": []
 }

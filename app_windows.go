@@ -39,6 +39,10 @@ func run(opts options) int {
 	}
 	defer release()
 
+	// A first run has no rules yet, so it opens the settings page.
+	_, statErr := os.Stat(opts.configPath)
+	firstRun := errors.Is(statErr, os.ErrNotExist)
+
 	cfg, err := LoadConfig(opts.configPath)
 	if err != nil {
 		showError(fmt.Sprintf("Could not load %s:\n\n%v\n\nFix the file or delete it to start from the defaults.", opts.configPath, err))
@@ -73,6 +77,9 @@ func run(opts options) int {
 	log.Printf("%d layer rules on %s, %d direct remaps", len(km.Layer), cfg.LayerKey, len(km.Remap))
 	if opts.debug {
 		log.Print("Press Ctrl+C or close this window to quit.")
+	}
+	if firstRun {
+		go openSettings(settings)
 	}
 
 	// Ctrl+C and closing the debug console both end up here.
